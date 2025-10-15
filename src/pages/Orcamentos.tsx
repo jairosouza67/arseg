@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -6,8 +8,75 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, Send, Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Orcamentos = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    contact: "",
+    email: "",
+    phone: "",
+    address: "",
+    products: "",
+    observations: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase.from("quotes").insert([
+        {
+          customer_name: formData.name,
+          customer_email: formData.email || null,
+          customer_phone: formData.phone,
+          items: [
+            {
+              products: formData.products,
+              contact: formData.contact,
+              address: formData.address,
+              observations: formData.observations,
+            },
+          ],
+          total_value: 0,
+          status: "pending",
+          notes: formData.observations,
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Seu orçamento foi enviado. Entraremos em contato em breve.",
+      });
+
+      setFormData({
+        name: "",
+        contact: "",
+        email: "",
+        phone: "",
+        address: "",
+        products: "",
+        observations: "",
+      });
+    } catch (error) {
+      console.error("Error submitting quote:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível enviar o orçamento. Tente novamente.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -37,59 +106,94 @@ const Orcamentos = () => {
                   Informe seus dados para que possamos preparar um orçamento personalizado
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome / Razão Social *</Label>
-                    <Input id="name" placeholder="Digite o nome ou razão social" required />
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome / Razão Social *</Label>
+                      <Input
+                        id="name"
+                        placeholder="Digite o nome ou razão social"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact">Pessoa de Contato</Label>
+                      <Input
+                        id="contact"
+                        placeholder="Nome do responsável"
+                        value={formData.contact}
+                        onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact">Pessoa de Contato</Label>
-                    <Input id="contact" placeholder="Nome do responsável" />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone / WhatsApp *</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        required
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">E-mail *</Label>
-                    <Input id="email" type="email" placeholder="seu@email.com" required />
+                    <Label htmlFor="address">Endereço Completo</Label>
+                    <Input
+                      id="address"
+                      placeholder="Rua, número, complemento, bairro, cidade - UF"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone / WhatsApp *</Label>
-                    <Input id="phone" type="tel" placeholder="(11) 99999-9999" required />
+                    <Label htmlFor="products">Produtos de Interesse *</Label>
+                    <Textarea
+                      id="products"
+                      placeholder="Liste os produtos e quantidades desejadas. Ex: 10x Extintor ABC 6kg, 5x Extintor CO₂ 6kg"
+                      className="min-h-[100px]"
+                      required
+                      value={formData.products}
+                      onChange={(e) => setFormData({ ...formData, products: e.target.value })}
+                    />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Endereço Completo</Label>
-                  <Input id="address" placeholder="Rua, número, complemento, bairro, cidade - UF" />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="observations">Observações</Label>
+                    <Textarea
+                      id="observations"
+                      placeholder="Informações adicionais, prazo de entrega, forma de pagamento preferida, etc."
+                      className="min-h-[100px]"
+                      value={formData.observations}
+                      onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="products">Produtos de Interesse *</Label>
-                  <Textarea
-                    id="products"
-                    placeholder="Liste os produtos e quantidades desejadas. Ex: 10x Extintor ABC 6kg, 5x Extintor CO₂ 6kg"
-                    className="min-h-[100px]"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="observations">Observações</Label>
-                  <Textarea
-                    id="observations"
-                    placeholder="Informações adicionais, prazo de entrega, forma de pagamento preferida, etc."
-                    className="min-h-[100px]"
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button variant="hero" size="lg" className="flex-1">
-                    <Send className="mr-2 h-4 w-4" />
-                    Enviar Solicitação
-                  </Button>
-                </div>
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <Button type="submit" variant="hero" size="lg" className="flex-1" disabled={isSubmitting}>
+                      <Send className="mr-2 h-4 w-4" />
+                      {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 

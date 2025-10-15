@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -39,6 +39,27 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (roleData) {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
+      }
+    };
+    checkUser();
+  }, [navigate]);
+
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
@@ -54,18 +75,32 @@ const Login = () => {
   const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
       if (error) throw error;
 
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authData.user?.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta.",
       });
-      navigate("/");
+
+      setTimeout(() => {
+        if (roleData) {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/");
+        }
+      }, 1000);
     } catch (error: any) {
       toast({
         variant: "destructive",

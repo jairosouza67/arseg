@@ -123,19 +123,19 @@ const Dashboard = () => {
             <CardContent className="space-y-2">
               <button
                 onClick={() => navigate("/admin/customers")}
-                className="w-full p-3 text-left rounded-md bg-secondary hover:bg-secondary/80 transition-colors"
+                className="w-full p-3 text-left rounded-md border border-border hover:bg-accent transition-colors"
               >
                 Gerenciar Clientes
               </button>
               <button
                 onClick={() => navigate("/admin/suppliers")}
-                className="w-full p-3 text-left rounded-md bg-secondary hover:bg-secondary/80 transition-colors"
+                className="w-full p-3 text-left rounded-md border border-border hover:bg-accent transition-colors"
               >
                 Gerenciar Fornecedores
               </button>
               <button
                 onClick={() => navigate("/admin/quotes")}
-                className="w-full p-3 text-left rounded-md bg-secondary hover:bg-secondary/80 transition-colors"
+                className="w-full p-3 text-left rounded-md border border-border hover:bg-accent transition-colors"
               >
                 Ver Orçamentos
               </button>
