@@ -13,7 +13,7 @@ export const Footer = () => {
                 <Flame className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                SafeFire Pro
+                Arseg
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
@@ -80,7 +80,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SafeFire Pro. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Arseg. Todos os direitos reservados.</p>
           <p className="mt-2">CNPJ: 00.000.000/0001-00</p>
         </div>
       </div>

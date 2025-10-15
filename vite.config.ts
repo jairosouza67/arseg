@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
       manifest: {
-        name: "SafeFire Pro - Extintores e Equipamentos",
-        short_name: "SafeFire Pro",
+        name: "Arseg - Extintores e Equipamentos",
+        short_name: "Arseg",
         description: "Sistema completo de gestão e venda de extintores de incêndio",
         theme_color: "#C00000",
         background_color: "#1a1a1a",
