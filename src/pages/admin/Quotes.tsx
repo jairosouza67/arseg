@@ -8,7 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+
+interface QuoteItem {
+  product_id: string;
+  product_name: string;
+  product_type: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
 
 interface Quote {
   id: string;
@@ -26,6 +35,7 @@ const Quotes = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchQuotes();
@@ -76,6 +86,18 @@ const Quotes = () => {
     }).format(value);
   };
 
+  const toggleRow = (id: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -99,28 +121,78 @@ const Quotes = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Telefone</TableHead>
-                  <TableHead>Valor</TableHead>
+                  <TableHead>Itens</TableHead>
+                  <TableHead>Valor Total</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {quotes.map((quote) => (
-                  <TableRow key={quote.id}>
-                    <TableCell>{formatDate(quote.created_at)}</TableCell>
-                    <TableCell className="font-medium">{quote.customer_name}</TableCell>
-                    <TableCell>{quote.customer_email || "-"}</TableCell>
-                    <TableCell>{quote.customer_phone}</TableCell>
-                    <TableCell>{formatCurrency(Number(quote.total_value))}</TableCell>
-                    <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={quote.id} className="cursor-pointer" onClick={() => toggleRow(quote.id)}>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          {expandedRows.has(quote.id) ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+                      <TableCell>{formatDate(quote.created_at)}</TableCell>
+                      <TableCell className="font-medium">{quote.customer_name}</TableCell>
+                      <TableCell>{quote.customer_email || "-"}</TableCell>
+                      <TableCell>{quote.customer_phone}</TableCell>
+                      <TableCell>{Array.isArray(quote.items) ? quote.items.length : 0} produto(s)</TableCell>
+                      <TableCell className="font-bold">{formatCurrency(Number(quote.total_value))}</TableCell>
+                      <TableCell>{getStatusBadge(quote.status)}</TableCell>
+                    </TableRow>
+                    {expandedRows.has(quote.id) && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="bg-muted/50">
+                          <div className="p-4 space-y-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">Produtos do Orçamento:</h4>
+                              {Array.isArray(quote.items) && quote.items.length > 0 ? (
+                                <div className="space-y-2">
+                                  {quote.items.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
+                                      <div>
+                                        <p className="font-medium">{item.product_name}</p>
+                                        <p className="text-sm text-muted-foreground">{item.product_type}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-sm">Quantidade: {item.quantity}</p>
+                                        <p className="text-sm">Preço unitário: {formatCurrency(item.unit_price)}</p>
+                                        <p className="font-medium">Subtotal: {formatCurrency(item.total_price)}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-muted-foreground">Nenhum produto listado</p>
+                              )}
+                            </div>
+                            {quote.notes && (
+                              <div>
+                                <h4 className="font-semibold mb-2">Observações:</h4>
+                                <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 ))}
                 {quotes.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       Nenhum orçamento encontrado
                     </TableCell>
                   </TableRow>

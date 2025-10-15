@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -7,13 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Send, Download } from "lucide-react";
+import { FileText, Send, Download, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
+import { Badge } from "@/components/ui/badge";
 
 const Orcamentos = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { items, clearCart, total } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -21,31 +24,42 @@ const Orcamentos = () => {
     email: "",
     phone: "",
     address: "",
-    products: "",
     observations: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (items.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Carrinho vazio",
+        description: "Adicione produtos ao carrinho antes de solicitar o orçamento.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      const quoteItems = items.map((item) => ({
+        product_id: item.id,
+        product_name: item.name,
+        product_type: item.type,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity,
+      }));
+
       const { error } = await supabase.from("quotes").insert([
         {
           customer_name: formData.name,
           customer_email: formData.email || null,
           customer_phone: formData.phone,
-          items: [
-            {
-              products: formData.products,
-              contact: formData.contact,
-              address: formData.address,
-              observations: formData.observations,
-            },
-          ],
-          total_value: 0,
+          items: quoteItems,
+          total_value: total,
           status: "pending",
-          notes: formData.observations,
+          notes: `Endereço: ${formData.address}\nContato: ${formData.contact}\nObservações: ${formData.observations}`,
         },
       ]);
 
@@ -56,13 +70,13 @@ const Orcamentos = () => {
         description: "Seu orçamento foi enviado. Entraremos em contato em breve.",
       });
 
+      clearCart();
       setFormData({
         name: "",
         contact: "",
         email: "",
         phone: "",
         address: "",
-        products: "",
         observations: "",
       });
     } catch (error) {
@@ -107,6 +121,29 @@ const Orcamentos = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Cart Summary */}
+                {items.length > 0 && (
+                  <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                    <h3 className="font-semibold mb-3">Produtos Selecionados</h3>
+                    <div className="space-y-2">
+                      {items.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center text-sm">
+                          <span>
+                            {item.name} x {item.quantity}
+                          </span>
+                          <span className="font-medium">
+                            R$ {(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="pt-2 border-t flex justify-between font-bold">
+                        <span>Total:</span>
+                        <span>R$ {total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -164,17 +201,6 @@ const Orcamentos = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="products">Produtos de Interesse *</Label>
-                    <Textarea
-                      id="products"
-                      placeholder="Liste os produtos e quantidades desejadas. Ex: 10x Extintor ABC 6kg, 5x Extintor CO₂ 6kg"
-                      className="min-h-[100px]"
-                      required
-                      value={formData.products}
-                      onChange={(e) => setFormData({ ...formData, products: e.target.value })}
-                    />
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="observations">Observações</Label>

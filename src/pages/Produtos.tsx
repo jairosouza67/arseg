@@ -1,33 +1,72 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
+import { CartDrawer } from "@/components/CartDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
-const allProducts = [
-  { id: 1, name: "Extintor ABC 4kg", type: "ABC - Pó Químico", price: 69.90, inStock: true },
-  { id: 2, name: "Extintor ABC 6kg", type: "ABC - Pó Químico", price: 89.90, inStock: true },
-  { id: 3, name: "Extintor ABC 12kg", type: "ABC - Pó Químico", price: 159.90, inStock: true },
-  { id: 4, name: "Extintor CO₂ 6kg", type: "CO₂", price: 199.90, inStock: true },
-  { id: 5, name: "Extintor CO₂ 10kg", type: "CO₂", price: 299.90, inStock: true },
-  { id: 6, name: "Extintor AB 10L", type: "AB - Água Pressurizada", price: 149.90, inStock: true },
-  { id: 7, name: "Extintor AB 50L", type: "AB - Água Pressurizada", price: 0, inStock: false },
-  { id: 8, name: "Extintor Pó Químico 20kg", type: "ABC - Pó Químico", price: 0, inStock: false },
-];
+interface Product {
+  id: string;
+  name: string;
+  type: string;
+  price: number;
+  in_stock: boolean;
+}
 
 const categories = ["Todos", "ABC - Pó Químico", "CO₂", "AB - Água Pressurizada"];
 
 const Produtos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [products, setProducts] = useState<Product[]>([]);
+  const { addItem } = useCart();
+  const { toast } = useToast();
 
-  const filteredProducts = allProducts.filter((product) => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar os produtos.",
+      });
+      return;
+    }
+
+    setProducts(data || []);
+  };
+
+  const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "Todos" || product.type === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      type: product.type,
+      price: product.price,
+    });
+    toast({
+      title: "Produto adicionado",
+      description: `${product.name} foi adicionado ao carrinho.`,
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -63,8 +102,8 @@ const Produtos = () => {
                 />
               </div>
 
-              {/* Category Filters */}
-              <div className="flex flex-wrap gap-2">
+              {/* Category Filters and Cart */}
+              <div className="flex flex-wrap gap-2 items-center">
                 {categories.map((category) => (
                   <Button
                     key={category}
@@ -75,6 +114,7 @@ const Produtos = () => {
                     {category}
                   </Button>
                 ))}
+                <CartDrawer />
               </div>
             </div>
           </div>
@@ -87,8 +127,11 @@ const Produtos = () => {
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
-                  {...product}
-                  onAddToQuote={() => console.log(`Added ${product.name} to quote`)}
+                  name={product.name}
+                  type={product.type}
+                  price={product.price}
+                  inStock={product.in_stock}
+                  onAddToQuote={() => handleAddToCart(product)}
                 />
               ))}
             </div>
