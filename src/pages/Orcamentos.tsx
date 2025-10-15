@@ -7,17 +7,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Send, Download, X } from "lucide-react";
+import { FileText, Send, Download, X, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface Product {
+  id: string;
+  name: string;
+  type: string;
+  price: number;
+  in_stock: boolean;
+}
+
+interface ManualItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  product_type: string;
+  quantity: number;
+  unit_price: number;
+}
 
 const Orcamentos = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { items, clearCart, total } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [manualItems, setManualItems] = useState<ManualItem[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
   const [formData, setFormData] = useState({
     name: "",
     contact: "",
@@ -27,14 +49,103 @@ const Orcamentos = () => {
     observations: "",
   });
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("in_stock", true)
+      .order("name");
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar os produtos.",
+      });
+      return;
+    }
+
+    setProducts(data || []);
+  };
+
+  const addManualItem = () => {
+    if (!selectedProductId) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Selecione um produto.",
+      });
+      return;
+    }
+
+    const product = products.find((p) => p.id === selectedProductId);
+    if (!product) return;
+
+    const existingItem = manualItems.find((item) => item.product_id === selectedProductId);
+    
+    if (existingItem) {
+      setManualItems(manualItems.map((item) =>
+        item.product_id === selectedProductId
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      ));
+    } else {
+      setManualItems([
+        ...manualItems,
+        {
+          id: crypto.randomUUID(),
+          product_id: product.id,
+          product_name: product.name,
+          product_type: product.type,
+          quantity,
+          unit_price: product.price,
+        },
+      ]);
+    }
+
+    setSelectedProductId("");
+    setQuantity(1);
+    
+    toast({
+      title: "Produto adicionado",
+      description: `${product.name} foi adicionado à lista.`,
+    });
+  };
+
+  const removeManualItem = (id: string) => {
+    setManualItems(manualItems.filter((item) => item.id !== id));
+  };
+
+  const updateManualItemQuantity = (id: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeManualItem(id);
+      return;
+    }
+    setManualItems(manualItems.map((item) =>
+      item.id === id ? { ...item, quantity: newQuantity } : item
+    ));
+  };
+
+  const manualTotal = manualItems.reduce(
+    (sum, item) => sum + item.unit_price * item.quantity,
+    0
+  );
+
+  const finalItems = items.length > 0 ? items : manualItems;
+  const finalTotal = items.length > 0 ? total : manualTotal;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (items.length === 0) {
+    if (finalItems.length === 0) {
       toast({
         variant: "destructive",
-        title: "Carrinho vazio",
-        description: "Adicione produtos ao carrinho antes de solicitar o orçamento.",
+        title: "Sem produtos",
+        description: "Adicione produtos antes de solicitar o orçamento.",
       });
       return;
     }
@@ -42,13 +153,13 @@ const Orcamentos = () => {
     setIsSubmitting(true);
 
     try {
-      const quoteItems = items.map((item) => ({
-        product_id: item.id,
-        product_name: item.name,
-        product_type: item.type,
+      const quoteItems = finalItems.map((item) => ({
+        product_id: item.id || item.product_id,
+        product_name: item.name || item.product_name,
+        product_type: item.type || item.product_type,
         quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.price * item.quantity,
+        unit_price: item.price || item.unit_price,
+        total_price: (item.price || item.unit_price) * item.quantity,
       }));
 
       const { error } = await supabase.from("quotes").insert([
@@ -57,7 +168,7 @@ const Orcamentos = () => {
           customer_email: formData.email || null,
           customer_phone: formData.phone,
           items: quoteItems,
-          total_value: total,
+          total_value: finalTotal,
           status: "pending",
           notes: `Endereço: ${formData.address}\nContato: ${formData.contact}\nObservações: ${formData.observations}`,
         },
@@ -71,6 +182,7 @@ const Orcamentos = () => {
       });
 
       clearCart();
+      setManualItems([]);
       setFormData({
         name: "",
         contact: "",
@@ -121,10 +233,80 @@ const Orcamentos = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Product Selection - Show only if cart is empty */}
+                {items.length === 0 && (
+                  <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                    <h3 className="font-semibold mb-3">Adicionar Produtos</h3>
+                    <div className="flex gap-2 mb-4">
+                      <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Selecione um produto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((product) => (
+                            <SelectItem key={product.id} value={product.id}>
+                              {product.name} - R$ {product.price.toFixed(2)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                        className="w-20"
+                        placeholder="Qtd"
+                      />
+                      <Button type="button" onClick={addManualItem} size="icon">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {manualItems.length > 0 && (
+                      <div className="space-y-2">
+                        {manualItems.map((item) => (
+                          <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-background rounded">
+                            <div className="flex-1">
+                              <p className="font-medium">{item.product_name}</p>
+                              <p className="text-xs text-muted-foreground">{item.product_type}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                onChange={(e) => updateManualItemQuantity(item.id, parseInt(e.target.value) || 1)}
+                                className="w-16 h-8"
+                              />
+                              <span className="text-sm font-medium w-24 text-right">
+                                R$ {(item.unit_price * item.quantity).toFixed(2)}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => removeManualItem(item.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="pt-2 border-t flex justify-between font-bold">
+                          <span>Total:</span>
+                          <span>R$ {manualTotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Cart Summary */}
                 {items.length > 0 && (
                   <div className="mb-6 p-4 border rounded-lg bg-muted/50">
-                    <h3 className="font-semibold mb-3">Produtos Selecionados</h3>
+                    <h3 className="font-semibold mb-3">Produtos do Carrinho</h3>
                     <div className="space-y-2">
                       {items.map((item) => (
                         <div key={item.id} className="flex justify-between items-center text-sm">
