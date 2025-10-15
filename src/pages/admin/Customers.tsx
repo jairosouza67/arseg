@@ -308,13 +308,13 @@ const Customers = () => {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(customer.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(customer.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                     </TableCell>
                   </TableRow>
                 ))}

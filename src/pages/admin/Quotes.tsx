@@ -8,7 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface QuoteItem {
   product_id: string;
@@ -98,6 +105,47 @@ const Quotes = () => {
     });
   };
 
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("quotes")
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível atualizar o status.",
+      });
+    } else {
+      toast({
+        title: "Sucesso",
+        description: "Status atualizado com sucesso.",
+      });
+      fetchQuotes();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este orçamento?")) return;
+
+    const { error } = await supabase.from("quotes").delete().eq("id", id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir o orçamento.",
+      });
+    } else {
+      toast({
+        title: "Sucesso",
+        description: "Orçamento excluído com sucesso.",
+      });
+      fetchQuotes();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -129,6 +177,7 @@ const Quotes = () => {
                   <TableHead>Itens</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -150,7 +199,33 @@ const Quotes = () => {
                       <TableCell>{quote.customer_phone}</TableCell>
                       <TableCell>{Array.isArray(quote.items) ? quote.items.length : 0} produto(s)</TableCell>
                       <TableCell className="font-bold">{formatCurrency(Number(quote.total_value))}</TableCell>
-                      <TableCell>{getStatusBadge(quote.status)}</TableCell>
+                      <TableCell>
+                        <Select
+                          value={quote.status}
+                          onValueChange={(value) => handleStatusChange(quote.id, value)}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendente</SelectItem>
+                            <SelectItem value="approved">Aprovado</SelectItem>
+                            <SelectItem value="rejected">Rejeitado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(quote.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                     {expandedRows.has(quote.id) && (
                       <TableRow>
@@ -192,7 +267,7 @@ const Quotes = () => {
                 ))}
                 {quotes.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       Nenhum orçamento encontrado
                     </TableCell>
                   </TableRow>
