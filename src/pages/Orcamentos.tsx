@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Send, Download, X, Plus, Trash2 } from "lucide-react";
+import { FileText, Send, Download, X, Plus, Trash2, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { generateQuotePDF } from "@/lib/generateQuotePDF";
 
 interface Product {
   id: string;
@@ -40,6 +41,7 @@ const Orcamentos = () => {
   const [manualItems, setManualItems] = useState<ManualItem[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
+  const [lastCreatedQuote, setLastCreatedQuote] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     contact: "",
@@ -162,7 +164,7 @@ const Orcamentos = () => {
         total_price: (item.price || item.unit_price) * item.quantity,
       }));
 
-      const { error } = await supabase.from("quotes").insert([
+      const { data, error } = await supabase.from("quotes").insert([
         {
           customer_name: formData.name,
           customer_email: formData.email || null,
@@ -172,9 +174,11 @@ const Orcamentos = () => {
           status: "pending",
           notes: `Endereço: ${formData.address}\nContato: ${formData.contact}\nObservações: ${formData.observations}`,
         },
-      ]);
+      ]).select();
 
       if (error) throw error;
+
+      setLastCreatedQuote(data?.[0]);
 
       toast({
         title: "Sucesso!",
@@ -394,6 +398,25 @@ const Orcamentos = () => {
                       onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
                     />
                   </div>
+
+                  {lastCreatedQuote && (
+                    <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-green-800 dark:text-green-200">Orçamento Criado com Sucesso!</h3>
+                          <p className="text-sm text-green-700 dark:text-green-300">Você já pode baixar o PDF do seu orçamento.</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => generateQuotePDF(lastCreatedQuote)}
+                          className="border-green-600 text-green-700 hover:bg-green-100 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900"
+                        >
+                          <FileDown className="mr-2 h-4 w-4" />
+                          Baixar PDF
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <Button type="submit" variant="hero" size="lg" className="flex-1" disabled={isSubmitting}>
