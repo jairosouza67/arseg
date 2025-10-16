@@ -5,7 +5,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, FileText, Building2, Package } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -16,8 +18,38 @@ const Dashboard = () => {
     products: 0,
   });
 
+  const [quotesByStatus, setQuotesByStatus] = useState<{ status: string; count: number; percentage: number }[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<{ name: string; in_stock: boolean }[]>([]);
+  const [recentQuotes, setRecentQuotes] = useState<any[]>([]);
+
   useEffect(() => {
     fetchStats();
+    fetchQuotesByStatus();
+    fetchLowStockProducts();
+    fetchRecentQuotes();
+
+    // Setup realtime subscriptions
+    const quotesChannel = supabase
+      .channel('quotes-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes' }, () => {
+        fetchStats();
+        fetchQuotesByStatus();
+        fetchRecentQuotes();
+      })
+      .subscribe();
+
+    const productsChannel = supabase
+      .channel('products-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        fetchStats();
+        fetchLowStockProducts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(quotesChannel);
+      supabase.removeChannel(productsChannel);
+    };
   }, []);
 
   const fetchStats = async () => {
@@ -35,6 +67,53 @@ const Dashboard = () => {
       products: productsCount.count || 0,
     });
   };
+
+  const fetchQuotesByStatus = async () => {
+    const { data: quotes } = await supabase.from("quotes").select("status");
+    
+    if (quotes) {
+      const statusCounts = quotes.reduce((acc: any, quote) => {
+        acc[quote.status] = (acc[quote.status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const total = quotes.length;
+      const statusData = Object.entries(statusCounts).map(([status, count]) => ({
+        status: status === 'pending' ? 'Pendente' : status === 'approved' ? 'Aprovado' : 'Cancelado',
+        count: count as number,
+        percentage: ((count as number) / total) * 100,
+      }));
+
+      setQuotesByStatus(statusData);
+    }
+  };
+
+  const fetchLowStockProducts = async () => {
+    const { data: products } = await supabase
+      .from("products")
+      .select("name, in_stock")
+      .eq("in_stock", false)
+      .order("name", { ascending: true })
+      .limit(10);
+
+    if (products) {
+      setLowStockProducts(products);
+    }
+  };
+
+  const fetchRecentQuotes = async () => {
+    const { data: quotes } = await supabase
+      .from("quotes")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (quotes) {
+      setRecentQuotes(quotes);
+    }
+  };
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -90,6 +169,92 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Analytics Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Quotes by Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Orçamentos por Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={quotesByStatus}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ status, percentage }) => `${status}: ${percentage.toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="hsl(var(--primary))"
+                    dataKey="count"
+                  >
+                    {quotesByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Low Stock Products */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                Produtos Fora de Estoque
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {lowStockProducts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Todos os produtos estão em estoque</p>
+                ) : (
+                  lowStockProducts.map((product, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <span className="font-medium">{product.name}</span>
+                      <span className="text-sm text-destructive font-semibold">Fora de estoque</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Quotes */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Orçamentos Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentQuotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum orçamento recente</p>
+              ) : (
+                recentQuotes.map((quote) => (
+                  <div key={quote.id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                    <div>
+                      <p className="font-medium">{quote.customer_name}</p>
+                      <p className="text-sm text-muted-foreground">{quote.customer_phone}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">R$ {parseFloat(quote.total_value).toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{quote.status}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <Card>
