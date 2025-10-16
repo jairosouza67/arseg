@@ -61,13 +61,11 @@ export const generateQuotePDF = (quote: QuoteData) => {
     item.product_name,
     item.product_type,
     item.quantity.toString(),
-    `R$ ${item.unit_price.toFixed(2)}`,
-    `R$ ${item.total_price.toFixed(2)}`,
   ]);
   
   autoTable(doc, {
     startY: 90,
-    head: [["Produto", "Tipo", "Qtd", "Preço Unit.", "Total"]],
+    head: [["Produto", "Tipo", "Quantidade"]],
     body: tableData,
     theme: "grid",
     headStyles: {
@@ -80,31 +78,28 @@ export const generateQuotePDF = (quote: QuoteData) => {
     },
     columnStyles: {
       2: { halign: "center" },
-      3: { halign: "right" },
-      4: { halign: "right" },
     },
   });
   
-  // Total
+  // Contact Info
   const finalY = (doc as any).lastAutoTable.finalY || 90;
-  doc.setFontSize(12);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text(
-    `VALOR TOTAL: R$ ${quote.total_value.toFixed(2)}`,
-    196,
-    finalY + 10,
-    { align: "right" }
-  );
+  doc.setTextColor(220, 38, 38); // Red color for emphasis
+  doc.text("VALORES SOB CONSULTA", 105, finalY + 10, { align: "center" });
+  doc.setTextColor(0, 0, 0); // Reset to black
+  doc.setFont("helvetica", "normal");
+  doc.text("Nosso vendedor entrará em contato para informar valores e condições de pagamento.", 105, finalY + 18, { align: "center" });
   
   // Notes
   if (quote.notes) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("OBSERVAÇÕES:", 14, finalY + 25);
+    doc.text("OBSERVAÇÕES:", 14, finalY + 30);
     
     doc.setFont("helvetica", "normal");
     const splitNotes = doc.splitTextToSize(quote.notes, 180);
-    doc.text(splitNotes, 14, finalY + 32);
+    doc.text(splitNotes, 14, finalY + 37);
   }
   
   // Footer

@@ -49,14 +49,8 @@ export const ProductCard = ({
           {type}
         </Badge>
         <CardTitle className="text-lg">{name}</CardTitle>
-        <p className="text-2xl font-bold text-primary">
-          {price > 0 ? (
-            <>
-              R$ {price.toFixed(2).replace('.', ',')}
-            </>
-          ) : (
-            <span className="text-base text-muted-foreground">Consultar</span>
-          )}
+        <p className="text-base text-muted-foreground font-medium">
+          Sob Consulta
         </p>
       </CardContent>
       
@@ -65,7 +59,6 @@ export const ProductCard = ({
           onClick={onAddToQuote}
           variant="default"
           className="w-full"
-          disabled={!inStock}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
           Adicionar ao Orçamento

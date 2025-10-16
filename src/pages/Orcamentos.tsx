@@ -220,7 +220,7 @@ const Orcamentos = () => {
                 Solicitar Orçamento
               </h1>
               <p className="text-xl text-primary-foreground/90">
-                Preencha o formulário e receba sua cotação em até 24 horas
+                Nosso vendedor entrará em contato para definir valores e condições
               </p>
             </div>
           </div>
@@ -249,7 +249,7 @@ const Orcamentos = () => {
                         <SelectContent>
                           {products.map((product) => (
                             <SelectItem key={product.id} value={product.id}>
-                              {product.name} - R$ {product.price.toFixed(2)}
+                              {product.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -283,9 +283,6 @@ const Orcamentos = () => {
                                 onChange={(e) => updateManualItemQuantity(item.id, parseInt(e.target.value) || 1)}
                                 className="w-16 h-8"
                               />
-                              <span className="text-sm font-medium w-24 text-right">
-                                R$ {(item.unit_price * item.quantity).toFixed(2)}
-                              </span>
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -298,10 +295,6 @@ const Orcamentos = () => {
                             </div>
                           </div>
                         ))}
-                        <div className="pt-2 border-t flex justify-between font-bold">
-                          <span>Total:</span>
-                          <span>R$ {manualTotal.toFixed(2)}</span>
-                        </div>
                       </div>
                     )}
                   </div>
@@ -317,15 +310,13 @@ const Orcamentos = () => {
                           <span>
                             {item.name} x {item.quantity}
                           </span>
-                          <span className="font-medium">
-                            R$ {(item.price * item.quantity).toFixed(2)}
-                          </span>
                         </div>
                       ))}
-                      <div className="pt-2 border-t flex justify-between font-bold">
-                        <span>Total:</span>
-                        <span>R$ {total.toFixed(2)}</span>
-                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Atenção:</strong> Nosso vendedor entrará em contato para informar valores e condições de pagamento.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -404,7 +395,7 @@ const Orcamentos = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="font-semibold text-green-800 dark:text-green-200">Orçamento Criado com Sucesso!</h3>
-                          <p className="text-sm text-green-700 dark:text-green-300">Você já pode baixar o PDF do seu orçamento.</p>
+                       <p className="text-sm text-green-700 dark:text-green-300">Nosso vendedor entrará em contato em breve para definir valores e condições.</p>
                         </div>
                         <Button
                           variant="outline"
@@ -445,11 +436,11 @@ const Orcamentos = () => {
               <Card className="text-center">
                 <CardHeader>
                   <Download className="w-8 h-8 text-primary mx-auto mb-2" />
-                  <CardTitle className="text-lg">PDF ou Word</CardTitle>
+                  <CardTitle className="text-lg">Contato Personalizado</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Receba o orçamento no formato de sua preferência
+                    Vendedor entrará em contato para definir valores e condições
                   </p>
                 </CardContent>
               </Card>

@@ -18,7 +18,7 @@ interface Product {
   in_stock: boolean;
 }
 
-const categories = ["Todos", "ABC - Pó Químico", "CO₂", "AB - Água Pressurizada"];
+const categories = ["Todos", "Pó ABC", "Pó BC", "CO₂", "Água Pressurizada"];
 
 const Produtos = () => {
   const [searchTerm, setSearchTerm] = useState("");
