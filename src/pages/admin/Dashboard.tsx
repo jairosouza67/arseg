@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp } from "lucide-react";
+import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp, UserCog } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 const Dashboard = () => {
@@ -293,6 +293,14 @@ const Dashboard = () => {
             >
               <Package className="mr-2 h-4 w-4" />
               Gerenciar Produtos
+            </Button>
+            <Button
+              variant="outline"
+              className="border border-border hover:bg-accent"
+              onClick={() => navigate("/admin/users")}
+            >
+              <UserCog className="mr-2 h-4 w-4" />
+              Gerenciar Usuários
             </Button>
           </CardContent>
         </Card>
