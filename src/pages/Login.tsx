@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Flame, Lock, Mail, UserPlus } from "lucide-react";
+import { Lock, Mail, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -175,9 +175,11 @@ const Login = () => {
           <Card className="shadow-glow animate-fade-in">
             <CardHeader className="text-center space-y-4">
               <div className="flex justify-center">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-hero">
-                  <Flame className="w-8 h-8 text-primary-foreground" />
-                </div>
+                <img
+                  src="/Imagem do WhatsApp de 2025-10-21 à(s) 15.52.42_6e8d4403.jpg"
+                  alt="ARSEG Extintores"
+                  className="h-20 w-auto object-contain"
+                />
               </div>
               <CardTitle className="text-2xl">
                 {mode === "login" && "Área Administrativa"}

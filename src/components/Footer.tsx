@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Flame, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 export const Footer = () => {
   return (
@@ -9,12 +9,11 @@ export const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-hero">
-                <Flame className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                Arseg
-              </span>
+              <img
+                src="/Imagem do WhatsApp de 2025-10-21 à(s) 15.52.42_6e8d4403.jpg"
+                alt="ARSEG Extintores"
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             <p className="text-sm text-muted-foreground">
               Segurança que protege vidas. Especialistas em equipamentos de combate a incêndio.
@@ -80,7 +79,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Arseg. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} ARSEG Extintores. Todos os direitos reservados.</p>
           <p className="mt-2">CNPJ: 00.000.000/0001-00</p>
         </div>
       </div>

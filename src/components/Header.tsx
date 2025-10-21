@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Flame, Menu, LogOut } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -27,13 +27,12 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-hero">
-            <Flame className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-            Arseg
-          </span>
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <img
+            src="/Imagem do WhatsApp de 2025-10-21 à(s) 15.52.42_6e8d4403.jpg"
+            alt="ARSEG Extintores"
+            className="h-12 w-auto object-contain"
+          />
         </Link>
 
         {/* Desktop Navigation */}
