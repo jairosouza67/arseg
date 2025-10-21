@@ -1,29 +1,31 @@
-**DIAGNÓSTICO DE TELA BRANCA - ARSEG Extintores**
+**ERRO: supabaseUrl is required**
 
-**1. Verificação de Conexão Supabase:**
-- Conexão com o projeto "arseg-extintores" confirmada
-- Status do projeto: ✅ Online e acessível
-- Endpoint API: https://your-project-id.supabase.co
-- Chave anônima válida: ✅ Presente no frontend
+**Causa provável:**
+- A variável de ambiente VITE_SUPABASE_URL não está definida ou está vazia no arquivo .env
+- A variável de ambiente está definida com um valor inválido (não é uma URL válida)
 
-**2. Possíveis causas de tela branca:**
-- Erro de compilação no Vite (verificar console do navegador)
-- Problemas de roteamento (React Router)
-- Erro de contexto de autenticação
-- Componentes que lançam exceções não tratadas
-- Problemas de performance com grandes datasets
+**Passos para corrigir:**
 
-**3. Verificação de autenticação:**
-- Token de autenticação presente no localStorage: ✅ Válido
-- Estado de usuário carregado: ⚠️ Carregando...
-- Redirecionamento de admin: ✅ Funcional
+1. Verifique o arquivo .env (ou .env.local) no diretório raiz do projeto.
+2. Certifique-se de que as seguintes variáveis estão definidas:
+   - VITE_SUPABASE_URL: URL do seu projeto Supabase (ex: https://your-project-id.supabase.co)
+   - VITE_SUPABASE_ANON_KEY: A chave anônima do seu projeto Supabase
 
-**4. Teste de conexão direta:**
-- Consulta de usuários executada com sucesso
-- Dados retornados: 15 registros de clientes
-- Operação de INSERT realizada com sucesso
+3. Se as variáveis não estiverem presentes, adicione-as com os valores corretos.
 
-**5. Regras de conexão reestabelecidas:**
-- Conexão WebSocket reaberta: ✅ Estável
-- Configuração de CORS atualizada: ✅ Permitindo todos os origins
-- Pool de conexões: 5/10 conexões disponíveis
+4. Reinicie o servidor de desenvolvimento para que as novas variáveis de ambiente sejam carregadas.
+
+5. Verifique o código de inicialização do Supabase (geralmente em um arquivo como `src/lib/supabase.ts` ou similar) para garantir que está usando as variáveis corretas:
+
+   ```typescript
+   import { createClient } from '@supabase/supabase-js'
+   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+   const supabase = createClient(supabaseUrl, supabaseKey)
+   ```
+
+6. Se o erro persistir, verifique se o arquivo .env está no diretório correto (raiz do projeto) e se o servidor de desenvolvimento está carregando as variáveis de ambiente.
+
+**Observação:** Variáveis de ambiente no Vite devem ser prefixadas com `VITE_` para serem acessíveis no cliente.
+
+**Resultado esperado:** Após a correção, o aplicativo deve inicializar o cliente Supabase corretamente e não exibir mais o erro.
