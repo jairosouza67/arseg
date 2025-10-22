@@ -7,7 +7,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useUserRole } from "@/hooks/useUserRole";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase-external";
 import { useToast } from "@/hooks/use-toast";
 
 export const Header = () => {
