@@ -58,7 +58,7 @@ export const CartDrawer = () => {
                     <h4 className="font-medium">{item.name}</h4>
                     <p className="text-sm text-muted-foreground">{item.type}</p>
                     <p className="text-sm font-medium mt-1">
-                      R$ {item.price.toFixed(2)}
+                      Preço: a combinar
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -89,10 +89,10 @@ export const CartDrawer = () => {
                   </Button>
                 </div>
               ))}
-              <div className="border-t pt-4 space-y-4">
+                <div className="border-t pt-4 space-y-4">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
-                  <span>R$ {total.toFixed(2)}</span>
+                  <span>VALORES SOB CONSULTA</span>
                 </div>
                 <Button onClick={handleCheckout} className="w-full" size="lg">
                   Solicitar Orçamento

@@ -255,7 +255,7 @@ const Products = () => {
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.type}</TableCell>
-                    <TableCell>R$ {product.price.toFixed(2)}</TableCell>
+                    <TableCell>Preço a combinar</TableCell>
                     <TableCell>
                       {product.in_stock ? (
                         <span className="text-green-600">Em estoque</span>

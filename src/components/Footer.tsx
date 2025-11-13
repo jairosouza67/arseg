@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Flame, Mail, Phone, MapPin, Home, Package, FileText, MessageSquare } from "lucide-react";
 
 export const Footer = () => {
   return (
@@ -8,12 +8,12 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <img
-                src="/Imagem do WhatsApp de 2025-10-21 à(s) 15.52.42_6e8d4403.jpg"
-                alt="ARSEG Extintores"
-                className="h-10 w-auto object-contain"
-              />
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/logo-arseg.jpg" alt="Arseg Extintores" className="w-12 h-12 object-contain" />
+              <div className="flex flex-col">
+                <span className="text-2xl font-extrabold text-primary tracking-tight leading-none">ARSEG</span>
+                <span className="text-sm font-medium text-muted-foreground -mt-1">Extintores</span>
+              </div>
             </Link>
             <p className="text-sm text-muted-foreground">
               Segurança que protege vidas. Especialistas em equipamentos de combate a incêndio.
@@ -25,23 +25,27 @@ export const Footer = () => {
             <h3 className="font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Início
+                <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Home className="w-4 h-4" />
+                  <span>Início</span>
                 </Link>
               </li>
               <li>
-                <Link to="/produtos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Produtos
+                <Link to="/produtos" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Package className="w-4 h-4" />
+                  <span>Produtos</span>
                 </Link>
               </li>
               <li>
-                <Link to="/orcamentos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Orçamentos
+                <Link to="/orcamentos" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <FileText className="w-4 h-4" />
+                  <span>Orçamentos</span>
                 </Link>
               </li>
               <li>
-                <Link to="/contato" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Contato
+                <Link to="/contato" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Contato</span>
                 </Link>
               </li>
             </ul>
@@ -51,10 +55,22 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Produtos</h3>
             <ul className="space-y-2">
-              <li className="text-sm text-muted-foreground">Extintores AB</li>
-              <li className="text-sm text-muted-foreground">Extintores ABC</li>
-              <li className="text-sm text-muted-foreground">Pó Químico</li>
-              <li className="text-sm text-muted-foreground">CO₂</li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Flame className="w-4 h-4 text-primary/70" />
+                <span>Extintores AB</span>
+              </li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Flame className="w-4 h-4 text-primary/70" />
+                <span>Extintores ABC</span>
+              </li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Flame className="w-4 h-4 text-primary/70" />
+                <span>Água Pressurizada</span>
+              </li>
+              <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Flame className="w-4 h-4 text-primary/70" />
+                <span>CO₂</span>
+              </li>
             </ul>
           </div>
 
@@ -64,23 +80,23 @@ export const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>(11) 9999-9999</span>
+                <span>(77) 3017-6264</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>contato@safefirepro.com.br</span>
+                <span>arsegextintores@hotmail.com</span>
               </li>
               <li className="flex items-start gap-2 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                <span>Rua da Segurança, 123<br />São Paulo - SP</span>
+                <span>Avenida Filipinas, Nº 08<br />Bairro Jurema - Vitória da Conquista</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} ARSEG Extintores. Todos os direitos reservados.</p>
-          <p className="mt-2">CNPJ: 00.000.000/0001-00</p>
+          <p>&copy; {new Date().getFullYear()} Arseg. Todos os direitos reservados.</p>
+          <p className="mt-2">CNPJ: 63.509.052/0001-08</p>
         </div>
       </div>
     </footer>

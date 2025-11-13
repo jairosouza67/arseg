@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+import { MobileNav } from "@/components/MobileNav";
 
 const Contato = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         {/* Page Header */}
         <section className="bg-gradient-hero py-20">
           <div className="container">
@@ -38,7 +39,7 @@ const Contato = () => {
                     <CardTitle>Telefone</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">(11) 9999-9999</p>
+                    <p className="text-muted-foreground">(77) 3017-6264</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       Segunda a Sexta, 8h às 18h
                     </p>
@@ -51,7 +52,7 @@ const Contato = () => {
                     <CardTitle>WhatsApp</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">(11) 9999-9999</p>
+                    <p className="text-muted-foreground">(77) 98842-6440</p>
                     <Button variant="hero" size="sm" className="mt-3 w-full">
                       Enviar Mensagem
                     </Button>
@@ -64,7 +65,7 @@ const Contato = () => {
                     <CardTitle>E-mail</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">contato@safefirepro.com.br</p>
+                    <p className="text-muted-foreground">arsegextintores@hotmail.com</p>
                   </CardContent>
                 </Card>
 
@@ -75,9 +76,8 @@ const Contato = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      Rua da Segurança, 123<br />
-                      Centro - São Paulo - SP<br />
-                      CEP 01000-000
+                      Avenida Filipinas, Nº 08<br />
+                      Bairro Jurema - Vitória da Conquista
                     </p>
                   </CardContent>
                 </Card>
@@ -138,6 +138,7 @@ const Contato = () => {
       </main>
 
       <Footer />
+      <MobileNav />
     </div>
   );
 };
