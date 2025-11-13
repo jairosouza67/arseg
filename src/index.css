@@ -8,85 +8,83 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+  --background: 0 0% 98%;
+  --foreground: 3 15% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 3 15% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 3 15% 15%;
 
-    --primary: 354 81% 57%;
-    --primary-foreground: 0 0% 100%;
+  --primary: 3 85% 52%; /* Vermelho mais vibrante */
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 3 90% 60%;
+  --primary-dark: 3 80% 38%;
 
-    --primary-glow: 354 81% 65%;
-    --primary-dark: 354 81% 45%;
+  --secondary: 217 72% 47%; /* Azul logomarca */
+  --secondary-foreground: 0 0% 100%;
 
-    --secondary: 207 78% 51%;
-    --secondary-foreground: 0 0% 100%;
+  --muted: 3 10% 96%;
+  --muted-foreground: 3 8% 46%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+  --accent: 3 85% 52%; /* Vermelho como accent */
+  --accent-foreground: 0 0% 100%;
 
-    --accent: 207 78% 51%;
-    --accent-foreground: 0 0% 100%;
+  --destructive: 3 85% 52%;
+  --destructive-foreground: 0 0% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+  --border: 3 15% 90%;
+  --input: 3 10% 92%;
+  --ring: 3 85% 52%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 354 81% 57%;
+  --radius: 0.5rem;
 
-    --radius: 0.5rem;
+  --gradient-hero: linear-gradient(135deg, hsl(3 85% 52%), hsl(3 75% 45%), hsl(217 72% 47%));
+  --gradient-card: linear-gradient(to bottom, hsl(0 0% 100%), hsl(3 10% 98%));
 
-    --gradient-hero: linear-gradient(135deg, hsl(354 81% 57%), hsl(207 78% 51%));
-    --gradient-card: linear-gradient(to bottom, hsl(0 0% 100%), hsl(0 0% 98%));
-
-    --shadow-elegant: 0 10px 30px -10px hsl(354 81% 57% / 0.2);
-    --shadow-glow: 0 0 40px hsl(354 81% 65% / 0.15);
-
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-elegant: 0 10px 30px -10px hsl(3 85% 52% / 0.3);
+  --shadow-glow: 0 0 40px hsl(3 90% 60% / 0.25);
+    
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
     --background: 0 0% 10%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 12%;
+    --card: 3 8% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 12%;
+    --popover: 3 8% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 354 81% 57%;
+    --primary: 3 85% 52%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 3 90% 60%;
+    --primary-dark: 3 80% 38%;
 
-    --primary-glow: 354 81% 65%;
-    --primary-dark: 354 81% 45%;
-
-    --secondary: 207 78% 51%;
+    --secondary: 217 72% 47%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 3 8% 15%;
+    --muted-foreground: 3 5% 65%;
 
-    --accent: 207 78% 51%;
+    --accent: 3 85% 52%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 3 85% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 354 81% 65%;
+    --border: 3 10% 20%;
+    --input: 3 8% 20%;
+    --ring: 3 90% 60%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(354 81% 57%), hsl(207 78% 51%));
-    --gradient-card: linear-gradient(to bottom, hsl(0 0% 12%), hsl(0 0% 10%));
+    --gradient-hero: linear-gradient(135deg, hsl(3 85% 52%), hsl(3 75% 45%), hsl(217 72% 47%));
+    --gradient-card: linear-gradient(to bottom, hsl(3 8% 12%), hsl(0 0% 10%));
 
-    --shadow-elegant: 0 10px 30px -10px hsl(354 81% 57% / 0.3);
-    --shadow-glow: 0 0 40px hsl(354 81% 65% / 0.2);
+    --shadow-elegant: 0 10px 30px -10px hsl(3 85% 52% / 0.4);
+    --shadow-glow: 0 0 40px hsl(3 90% 60% / 0.3);
   }
 }
 
@@ -98,4 +96,16 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom styles for hero text to make it darker and more prominent */
+.hero-text-dark {
+  color: hsl(3 15% 15%) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .hero-text-dark {
+  color: hsl(0 0% 98%) !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 }

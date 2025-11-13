@@ -1,181 +1,124 @@
-import { useState, useEffect } from "react";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { Shield, UserCog } from "lucide-react";
+import type { Enums } from "@/integrations/supabase/types";
 
-type UserWithRole = {
+// Define os papéis disponíveis, garantindo que 'seller' esteja incluído.
+type AppRole = Enums<"app_role">;
+const ROLES: AppRole[] = ["admin", "seller", "user"];
+
+interface UserData {
   id: string;
-  email: string;
-  role: 'admin' | 'user' | null;
-  created_at: string;
-};
+  email: string | undefined;
+  role: AppRole | null;
+}
 
-export default function Users() {
-  const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// Função para buscar todos os usuários e seus papéis
+async function fetchUsers(): Promise<UserData[]> {
+  // Requer privilégios de admin no Supabase para listar usuários
+  const { data, error } = await supabase.functions.invoke('list-users');
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  if (error) {
+    throw new Error(`Erro ao buscar usuários: ${error.message}. Verifique as permissões no Supabase.`);
+  }
 
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true);
+  return data.users;
+}
 
-      // Fetch all users from auth metadata
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
+// Função para atualizar o papel de um usuário
+async function updateUserRole({ userId, role }: { userId: string; role: AppRole | null }) {
+  // Usa 'upsert' para criar um papel se não existir, ou atualizar se já existir.
+  const { error } = await supabase
+    .from("user_roles")
+    .upsert({ user_id: userId, role: role }, { onConflict: 'user_id' });
 
-      // Fetch all user roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
+  if (error) {
+    throw new Error(`Erro ao atualizar papel: ${error.message}`);
+  }
+}
 
-      if (rolesError) throw rolesError;
+export default function UsersPage() {
+  const queryClient = useQueryClient();
+  const { data: users, isLoading, error } = useQuery<UserData[]>({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
 
-      // Combine user data with roles
-      const usersWithRoles: UserWithRole[] = authUsers.users.map(user => {
-        const userRole = roles?.find(r => r.user_id === user.id);
-        return {
-          id: user.id,
-          email: user.email || '',
-          role: userRole?.role || null,
-          created_at: user.created_at
-        };
-      });
+  const mutation = useMutation({
+    mutationFn: updateUserRole,
+    onSuccess: () => {
+      toast.success("Papel do usuário atualizado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+  });
 
-      setUsers(usersWithRoles);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Erro ao carregar usuários');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRoleChange = (userId: string, role: string) => {
+    // Converte 'null' (string) para o valor null real
+    const newRole = role === "null" ? null : (role as AppRole);
+    mutation.mutate({ userId, role: newRole });
   };
 
-  const handleRoleChange = async (userId: string, newRole: 'admin' | 'user' | 'remove') => {
-    try {
-      if (newRole === 'remove') {
-        // Remove role
-        const { error } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', userId);
-
-        if (error) throw error;
-        toast.success('Permissão removida com sucesso');
-      } else {
-        // Check if user already has a role
-        const { data: existingRole } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (existingRole) {
-          // Update existing role
-          const { error } = await supabase
-            .from('user_roles')
-            .update({ role: newRole })
-            .eq('user_id', userId);
-
-          if (error) throw error;
-        } else {
-          // Insert new role
-          const { error } = await supabase
-            .from('user_roles')
-            .insert({ user_id: userId, role: newRole });
-
-          if (error) throw error;
-        }
-
-        toast.success('Permissão atualizada com sucesso');
-      }
-
-      // Refresh users list
-      fetchUsers();
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error('Erro ao atualizar permissão');
-    }
-  };
+  if (isLoading) return <div className="p-4">Carregando usuários...</div>;
+  if (error) return <div className="p-4 text-red-500">Erro: {error.message}</div>;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <UserCog className="h-6 w-6" />
-              <CardTitle>Gerenciamento de Usuários</CardTitle>
-            </div>
-            <CardDescription>
-              Gerencie as permissões e níveis de acesso dos usuários
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Carregando usuários...</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Permissão Atual</TableHead>
-                    <TableHead>Data de Cadastro</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.email}</TableCell>
-                      <TableCell>
-                        {user.role ? (
-                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                            {user.role === 'admin' && <Shield className="h-3 w-3 mr-1" />}
-                            {user.role === 'admin' ? 'Administrador' : 'Usuário'}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">Sem permissão</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={user.role || 'none'}
-                          onValueChange={(value) => handleRoleChange(user.id, value as 'admin' | 'user' | 'remove')}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Selecionar permissão" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Administrador</SelectItem>
-                            <SelectItem value="user">Usuário</SelectItem>
-                            <SelectItem value="remove">Remover permissão</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-      <Footer />
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Gerenciamento de Usuários</h1>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead className="w-[200px]">Papel</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users?.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">{user.email}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role ?? "null"}
+                    onValueChange={(value) => handleRoleChange(user.id, value)}
+                    disabled={mutation.isPending}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Definir papel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">Usuário Padrão</SelectItem>
+                      {ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {/* Capitaliza o nome do papel para exibição */}
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

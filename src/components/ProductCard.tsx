@@ -21,44 +21,43 @@ export const ProductCard = ({
   onAddToQuote,
 }: ProductCardProps) => {
   return (
-    <Card className="group overflow-hidden hover:shadow-glow transition-all duration-300 animate-fade-in">
+    <Card className="group overflow-hidden hover:shadow-elegant hover:border-primary/30 transition-all duration-300 animate-fade-in border-primary/10">
       <CardHeader className="p-0">
-        <div className="relative h-48 bg-gradient-card overflow-hidden">
+        <div className="relative h-56 bg-muted overflow-hidden">
           {image ? (
             <img
               src={image}
               alt={name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <span className="text-6xl">🧯</span>
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-muted/50">
+              <span className="text-7xl opacity-30">🧯</span>
             </div>
           )}
           <Badge
             variant={inStock ? "default" : "secondary"}
-            className="absolute top-3 right-3"
+            className="absolute top-4 right-4 shadow-md"
           >
             {inStock ? "Em Estoque" : "Sob Consulta"}
           </Badge>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-6 space-y-2">
-        <Badge variant="outline" className="mb-2">
+      <CardContent className="pt-6 space-y-3">
+        <Badge variant="outline" className="mb-1">
           {type}
         </Badge>
-        <CardTitle className="text-lg">{name}</CardTitle>
-        <p className="text-base text-muted-foreground font-medium">
+        <CardTitle className="text-xl font-semibold">{name}</CardTitle>
+        <p className="text-sm text-muted-foreground">
           Sob Consulta
         </p>
       </CardContent>
       
-      <CardFooter>
+      <CardFooter className="pt-0">
         <Button
           onClick={onAddToQuote}
-          variant="default"
-          className="w-full"
+          className="w-full group-hover:shadow-elegant group-hover:shadow-primary/20 transition-all"
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
           Adicionar ao Orçamento

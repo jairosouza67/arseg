@@ -1,11 +1,12 @@
-import { Navigate } from "react-router-dom";
-import { useUserRole } from "@/hooks/useUserRole";
+import { Navigate, useLocation } from "react-router-dom";
 import { Skeleton } from "./ui/skeleton";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdmin, isLoading } = useUserRole();
+  const { isAdmin, loading, isAuthenticated } = useAuthRole();
+  const location = useLocation();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 w-full max-w-md p-6">
@@ -17,8 +18,8 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated || !isAdmin) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

@@ -16,8 +16,8 @@ const categories = [
   },
   {
     icon: Wind,
-    title: "Pó Químico",
-    description: "Versatilidade para diferentes classes de incêndio com alta eficiência",
+    title: "Água Pressurizada",
+    description: "Solução eficaz para incêndios classe A com água sob pressão",
     color: "text-accent",
   },
   {

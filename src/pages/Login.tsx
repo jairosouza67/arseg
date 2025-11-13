@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Lock, Mail, UserPlus } from "lucide-react";
+import { Flame, Lock, Mail, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -38,27 +38,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        
-        if (roleData) {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
-      }
-    };
-    checkUser();
-  }, [navigate]);
+  const from = location.state?.from?.pathname || "/";
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -75,37 +57,48 @@ const Login = () => {
   const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
+      // Try to sign in
+      const res: any = await (supabase as any).auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (error) throw error;
+      // Log full response for debugging
+      console.debug("signInWithPassword response:", res);
 
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authData.user?.id)
-        .eq("role", "admin")
-        .maybeSingle();
+      const authData = res.data;
+      const error = res.error;
+
+      if (error) {
+        // show detailed error to user
+        throw error;
+      }
+
+      // Ensure session/user is available (some environments need explicit getUser/getSession)
+      const waitForSession = async (retries = 10, delay = 300) => {
+        for (let i = 0; i < retries; i++) {
+          const sessionRes: any = await (supabase as any).auth.getSession();
+          console.debug("getSession attempt", i, sessionRes);
+          if (sessionRes?.data?.session) return sessionRes;
+          await new Promise((r) => setTimeout(r, delay));
+        }
+        return await (supabase as any).auth.getSession();
+      };
+
+      const sessionRes: any = await waitForSession(10, 300);
+      console.debug("getSession response after sign-in (final):", sessionRes);
 
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta.",
       });
 
-      setTimeout(() => {
-        if (roleData) {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
-      }, 1000);
+      navigate(from, { replace: true });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message,
+        description: error.message || JSON.stringify(error),
       });
     } finally {
       setLoading(false);
@@ -175,11 +168,9 @@ const Login = () => {
           <Card className="shadow-glow animate-fade-in">
             <CardHeader className="text-center space-y-4">
               <div className="flex justify-center">
-                <img
-                  src="/Imagem do WhatsApp de 2025-10-21 à(s) 15.52.42_6e8d4403.jpg"
-                  alt="ARSEG Extintores"
-                  className="h-20 w-auto object-contain"
-                />
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-hero">
+                  <Flame className="w-8 h-8 text-primary-foreground" />
+                </div>
               </div>
               <CardTitle className="text-2xl">
                 {mode === "login" && "Área Administrativa"}

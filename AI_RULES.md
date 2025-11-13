@@ -1,109 +1,91 @@
-# AI_RULES.md - ARSEG Extintores Application
+# AI_RULES.md - Arseg Extintores App
 
 ## Tech Stack
 
-- **Frontend Framework**: React 18.3.1 with TypeScript
-- **Build Tool**: Vite 5.4.19 for fast development and optimized builds
-- **Routing**: React Router DOM 6.30.1 for client-side routing
-- **UI Framework**: shadcn/ui components with Radix UI primitives
-- **Styling**: Tailwind CSS 3.4.17 with custom design system
-- **State Management**: React Context API for cart and global state
-- **Data Fetching**: TanStack React Query 5.83.0 for server state management
-- **Authentication**: Supabase 2.75.0 for auth and database operations
-- **Form Handling**: React Hook Form 7.61.1 with Zod 3.25.76 validation
-- **PDF Generation**: jsPDF 3.0.3 with jspdf-autotable 5.0.2
-- **Charts**: Recharts 2.15.4 for data visualization
-- **Icons**: Lucide React 0.462.0
-- **Notifications**: Sonner 1.7.4 for toast notifications
-- **PWA**: Vite Plugin PWA 1.1.0 for progressive web app features
+- **React 18.3.1** - Frontend framework with TypeScript support
+- **Vite** - Build tool and development server for fast hot reload
+- **TypeScript** - Static type checking for better code quality
+- **Tailwind CSS** - Utility-first CSS framework for styling
+- **shadcn/ui** - High-quality component library built on Radix UI
+- **React Router DOM** - Declarative routing for React applications
+- **Supabase** - Backend-as-a-Service with authentication and database
+- **TanStack Query (React Query)** - Server state management
+- **React Hook Form** - Performant, flexible, and extensible forms library
+- **Zod** - TypeScript-first schema validation
 
 ## Library Usage Rules
 
 ### UI Components
-- **Use shadcn/ui components** for all UI elements (buttons, cards, dialogs, etc.)
-- **Import components** from `@/components/ui/` (e.g., `import { Button } from "@/components/ui/button"`)
-- **Customize components** only when necessary by creating new components in `src/components/`
-- **Use Radix UI primitives** directly only when building custom shadcn/ui components
+- **Always use shadcn/ui components** when available
+- **Import from "@/components/ui/[component]"** - Never import from node_modules directly
+- **Custom components** should be placed in `src/components/` with descriptive names
+- **Use Tailwind CSS classes** for all styling - no custom CSS files unless absolutely necessary
+- **Follow the existing design system** defined in `src/index.css` with HSL color variables
 
-### Styling
-- **Use Tailwind CSS classes** exclusively for styling
-- **Follow the design system** defined in `src/index.css` with HSL color variables
-- **Use custom CSS** only for animations and effects defined in `tailwind.config.ts`
-- **Responsive design** is mandatory - use responsive Tailwind classes
+### Forms & Validation
+- **Use React Hook Form** for all form implementations
+- **Use Zod** for schema validation with `@hookform/resolvers/zod`
+- **Form components** should be reusable and follow the existing patterns
+- **Always include proper error handling** and user feedback
 
 ### State Management
-- **Use React Context** for global state (cart, user role)
-- **Use React Query** for server state and data fetching
-- **Local component state** for UI state (form inputs, modals)
+- **Use React Context** for global state (like cart context)
+- **Use TanStack Query** for server state and data fetching
+- **Local component state** should use React hooks (`useState`, `useEffect`)
 - **Avoid prop drilling** - use context or composition patterns
 
-### Data Fetching
+### Routing & Navigation
+- **Use React Router DOM** exclusively for routing
+- **Route definitions** should be in `src/App.tsx`
+- **Pages** should be placed in `src/pages/` with corresponding components
+- **Use `useNavigate`** for programmatic navigation
+- **Always include proper 404 handling** with a `NotFound` component
+
+### Data & API
 - **Use Supabase** for all database operations and authentication
-- **Use React Query** for caching, background updates, and optimistic UI
-- **Type database responses** using the generated types from `src/integrations/supabase/types.ts`
+- **Import from "@/integrations/supabase/client"** for client-side operations
+- **Use TypeScript types** from `@/integrations/supabase/types`
+- **Always handle loading states** and errors gracefully
+- **Use proper error boundaries** for API failures
 
-### Forms
-- **Use React Hook Form** for all forms
-- **Use Zod** for schema validation
-- **Integrate with Supabase** for form submissions
-- **Show loading states** during form submissions
-
-### Authentication
-- **Use Supabase Auth** for all authentication needs
-- **Protect routes** with the `AdminRoute` component for admin-only pages
-- **Check user roles** using the `useUserRole` hook
-- **Handle auth errors** gracefully with toast notifications
-
-### PDF Generation
-- **Use jsPDF** for generating PDF reports and quotes
-- **Use the `generateQuotePDF` utility** for quote documents
-- **Include proper headers, footers, and formatting** in PDFs
-
-### Charts and Data Visualization
-- **Use Recharts** for all charting needs
-- **Follow the dashboard patterns** established in admin pages
-- **Make charts responsive** and accessible
+### Styling & Design
+- **Use Tailwind CSS utility classes** exclusively
+- **Follow the existing color system** defined in `src/index.css`
+- **Use the design tokens** (shades, spacing, etc.) consistently
+- **Implement responsive design** using Tailwind's responsive utilities
+- **Use the existing animation classes** (`animate-fade-in`, `animate-scale-in`, etc.)
 
 ### Icons
-- **Use Lucide React icons** exclusively
-- **Import icons directly** (e.g., `import { Shield } from "lucide-react"`)
-- **Use consistent icon sizes** and styling
+- **Use lucide-react** for all icons
+- **Import specific icons** by name (e.g., `import { Flame } from "lucide-react"`)
+- **Use consistent icon sizes** (typically h-4 w-4, h-5 w-5, or h-6 w-6)
 
-### Notifications
-- **Use Sonner** for all toast notifications
-- **Import from `@/hooks/use-toast`** for consistent usage
-- **Show success/error states** for all user actions
-
-### File Structure
-- **Pages** go in `src/pages/` (e.g., `src/pages/Index.tsx`)
-- **Components** go in `src/components/` (e.g., `src/components/Header.tsx`)
-- **Hooks** go in `src/hooks/` (e.g., `src/hooks/useUserRole.tsx`)
-- **Utilities** go in `src/lib/` (e.g., `src/lib/generateQuotePDF.ts`)
-- **Contexts** go in `src/contexts/` (e.g., `src/contexts/CartContext.tsx`)
-- **Integration code** goes in `src/integrations/` (e.g., `src/integrations/supabase/`)
+### File Organization
+- **Pages** go in `src/pages/`
+- **Components** go in `src/components/`
+- **Hooks** go in `src/hooks/`
+- **Contexts** go in `src/contexts/`
+- **Utils** go in `src/lib/`
+- **Types** go in `src/integrations/supabase/types.ts`
+- **Assets** go in `src/assets/`
 
 ### Code Quality
 - **Use TypeScript** for all new code
 - **Follow ESLint rules** defined in the project
-- **Write semantic HTML** with proper accessibility
-- **Use proper error boundaries** for error handling
-- **Write responsive code** that works on all device sizes
+- **Use meaningful variable and function names**
+- **Write JSDoc comments** for complex functions and components
+- **Implement proper error handling** with try/catch blocks where appropriate
 
 ### Performance
-- **Use React Query** for efficient data fetching and caching
-- **Implement lazy loading** for heavy components
-- **Optimize images** and assets
-- **Use proper memoization** for expensive computations
+- **Use React.memo** for expensive components that don't change often
+- **Use useCallback/useMemo** for functions and values that are expensive to compute
+- **Implement proper loading states** for async operations
+- **Use lazy loading** for large components or pages when needed
+- **Optimize bundle size** by tree-shaking unused imports
 
-### Security
-- **Validate all user input** on both client and server
-- **Use Supabase RLS** for row-level security
-- **Sanitize user-generated content**
-- **Use environment variables** for sensitive data
-- **Implement proper CORS policies**
-
-### Testing
-- **Write unit tests** for utilities and complex functions
-- **Test components** with React Testing Library
-- **Test forms** with proper validation scenarios
-- **Mock API calls** in tests
+### Accessibility
+- **Use semantic HTML** elements
+- **Include proper ARIA labels** where needed
+- **Ensure keyboard navigation** works
+- **Provide proper contrast** for text and backgrounds
+- **Test with screen readers** when possible

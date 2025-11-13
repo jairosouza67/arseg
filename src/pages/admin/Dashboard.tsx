@@ -6,8 +6,9 @@ import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp, UserCog } from "lucide-react";
+import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp, UserCog, Bell } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useRenewalReminders } from "@/hooks/useRenewalReminders";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const Dashboard = () => {
   const [quotesByStatus, setQuotesByStatus] = useState<{ status: string; count: number; percentage: number }[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<{ name: string; in_stock: boolean }[]>([]);
   const [recentQuotes, setRecentQuotes] = useState<any[]>([]);
+
+  const { pendingReminders } = useRenewalReminders();
 
   useEffect(() => {
     fetchStats();
@@ -170,6 +173,31 @@ const Dashboard = () => {
           </Card>
         </div>
 
+        {/* Alertas de Lembretes Pendentes */}
+        {pendingReminders.length > 0 && (
+          <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                <AlertTriangle className="h-5 w-5" />
+                Lembretes de Renovação Pendentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-orange-700 dark:text-orange-300 mb-4">
+                Você tem {pendingReminders.length} lembrete(s) de renovação de extintores para enviar.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin/renewal-reminders")}
+                className="border-orange-600 text-orange-700 hover:bg-orange-100 dark:border-orange-400 dark:text-orange-300 dark:hover:bg-orange-900"
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                Ver Lembretes
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Quotes by Status */}
@@ -246,7 +274,6 @@ const Dashboard = () => {
                       <p className="text-sm text-muted-foreground">{quote.customer_phone}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">R$ {parseFloat(quote.total_value).toFixed(2)}</p>
                       <p className="text-sm text-muted-foreground capitalize">{quote.status}</p>
                     </div>
                   </div>
@@ -285,6 +312,14 @@ const Dashboard = () => {
             >
               <FileText className="mr-2 h-4 w-4" />
               Ver Orçamentos
+            </Button>
+            <Button
+              variant="outline"
+              className="border border-border hover:bg-accent"
+              onClick={() => navigate("/admin/renewal-reminders")}
+            >
+              <Bell className="mr-2 h-4 w-4" />
+              Lembretes de Renovação
             </Button>
             <Button
               variant="outline"

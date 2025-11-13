@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { MobileNav } from "@/components/MobileNav";
 
 interface Product {
   id: string;
@@ -72,7 +73,7 @@ const Produtos = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         {/* Page Header */}
         <section className="bg-gradient-hero py-20">
           <div className="container">
@@ -148,6 +149,7 @@ const Produtos = () => {
       </main>
 
       <Footer />
+      <MobileNav />
     </div>
   );
 };
