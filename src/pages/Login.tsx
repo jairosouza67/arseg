@@ -49,29 +49,10 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/", { replace: true });
+      console.log("✅ User already authenticated, redirecting to:", from);
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    const check = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session) {
-        navigate("/", { replace: true });
-      }
-    };
-    check();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        navigate("/", { replace: true });
-      }
-    });
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -136,8 +117,9 @@ const Login = () => {
         description: "Bem-vindo de volta.",
       });
 
-      // Aguardar um pouco para garantir que useAuthRole carregou
-      await new Promise((r) => setTimeout(r, 500));
+      // Aguardar useAuthRole carregar a role antes de navegar
+      console.log("⏳ Aguardando 1.5s para useAuthRole carregar...");
+      await new Promise((r) => setTimeout(r, 1500));
 
       console.log("Navegando para:", from);
       navigate(from, { replace: true });

@@ -6,7 +6,10 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, loading, isAuthenticated } = useAuthRole();
   const location = useLocation();
 
+  console.log("🛡️ AdminRoute check:", { isAdmin, loading, isAuthenticated, path: location.pathname });
+
   if (loading) {
+    console.log("⏳ AdminRoute: Still loading...");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 w-full max-w-md p-6">
@@ -19,8 +22,10 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isAuthenticated || !isAdmin) {
+    console.log("❌ AdminRoute: Access denied, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  console.log("✅ AdminRoute: Access granted");
   return <>{children}</>;
 };
