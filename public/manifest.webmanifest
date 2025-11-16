@@ -1,0 +1,21 @@
+{
+  "name": "Arseg - Extintores e Equipamentos de Segurança",
+  "short_name": "Arseg",
+  "description": "Equipamentos de combate a incêndio de alta qualidade. Extintores AB, ABC, Pó Químico e CO₂.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#C00000",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
