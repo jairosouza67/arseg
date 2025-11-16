@@ -114,7 +114,7 @@ RETURNS TABLE(
     status TEXT,
     user_email TEXT,
     user_id UUID,
-    current_role app_role
+    user_role app_role
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -199,19 +199,4 @@ ORDER BY total_users DESC;
 -- SCRIPT CONCLUÍDO
 -- =====================================================
 
-RAISE NOTICE '
-╔═══════════════════════════════════════════════════╗
-║  SISTEMA DE ROLES ESTABILIZADO COM SUCESSO!      ║
-╚═══════════════════════════════════════════════════╝
-
-✅ Tabela user_roles protegida
-✅ RLS desabilitado (sem recursão)
-✅ Admin jairosouza67@gmail.com garantido
-✅ Trigger automático criado
-✅ Funções de reparo disponíveis
-
-FUNÇÕES DISPONÍVEIS:
-- SELECT public.ensure_admin_exists();
-- SELECT * FROM public.verify_and_fix_admin_role();
-- SELECT * FROM public.v_user_roles_summary;
-';
+-- Mensagem de sucesso será mostrada nos resultados acima
