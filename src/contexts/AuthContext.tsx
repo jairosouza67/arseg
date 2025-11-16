@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums } from "@/integrations/supabase/types";
+import { useAuthHealthMonitor } from "@/hooks/useAuthHealthMonitor";
 
 type AppRole = Enums<"app_role"> | 'seller' | null;
 
@@ -210,13 +211,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isUser = !role;
   const isAuthenticated = !!userId;
 
+  // Monitor de saúde da autenticação
+  const { isHealthy, failureCount } = useAuthHealthMonitor(userId, role, isAuthenticated);
+
+  // Alertar no console se houver problemas
+  useEffect(() => {
+    if (!isHealthy && failureCount > 0) {
+      console.warn(`⚠️ Auth health degraded: ${failureCount} consecutive failures`);
+    }
+  }, [isHealthy, failureCount]);
+
   console.log("🔍 AuthProvider state:", 
     "userId:", userId,
     "role:", role,
     "isAdmin:", isAdmin,
     "isSeller:", isSeller,
     "isAuthenticated:", isAuthenticated,
-    "loading:", loading
+    "loading:", loading,
+    "health:", isHealthy ? "✅" : "⚠️"
   );
 
   return (
