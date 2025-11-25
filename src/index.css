@@ -43,8 +43,8 @@ All colors MUST be HSL.
   --gradient-hero: linear-gradient(135deg, hsl(3 85% 52%), hsl(3 75% 45%), hsl(217 72% 47%));
   --gradient-card: linear-gradient(to bottom, hsl(0 0% 100%), hsl(3 10% 98%));
 
-  --shadow-elegant: 0 10px 30px -10px hsl(3 85% 52% / 0.3);
-  --shadow-glow: 0 0 40px hsl(3 90% 60% / 0.25);
+  --shadow-elegant: 0 10px 30px -10px hsl(3 85% 52% / 0.15);
+  --shadow-glow: 0 0 40px hsl(3 90% 60% / 0.15);
     
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }

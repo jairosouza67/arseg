@@ -7,11 +7,26 @@ export const Hero = () => {
     <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden bg-background">
       {/* Background with Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/30 to-background"></div>
-      
+
       {/* Elegant red light elements */}
-      <div className="absolute top-20 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 left-10 w-80 h-80 bg-primary/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+      {/* Elegant red light elements - Reduced intensity */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-10 left-10 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+
+      {/* Extinguisher Overlay */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        <img
+          src="/products/extintor-abc.png"
+          alt=""
+          className="absolute -left-20 top-20 w-96 opacity-10 -rotate-12 blur-[1px]"
+        />
+        <img
+          src="/products/extintor-co2.png"
+          alt=""
+          className="absolute -right-20 bottom-0 w-96 opacity-10 rotate-12 blur-[1px]"
+        />
+      </div>
 
       <div className="container relative z-10 py-24">
         <div className="max-w-4xl mx-auto space-y-12 animate-fade-in">
@@ -23,7 +38,7 @@ export const Hero = () => {
 
             <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-tight tracking-tight">
               Segurança que
-              <span className="block mt-2 bg-gradient-hero bg-clip-text text-transparent leading-tight">
+              <span className="block mt-2 text-primary leading-tight">
                 protege vidas
               </span>
             </h1>

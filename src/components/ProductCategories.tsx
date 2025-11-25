@@ -35,7 +35,8 @@ export const ProductCategories = () => {
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold">
             Nossos Tipos de{" "}
-            <span className="bg-gradient-hero bg-clip-text text-transparent">
+            Nossos Tipos de{" "}
+            <span className="text-primary">
               Extintores
             </span>
           </h2>
@@ -48,7 +49,7 @@ export const ProductCategories = () => {
           {categories.map((category, index) => (
             <Card
               key={category.title}
-              className="group hover:shadow-elegant transition-all duration-300 cursor-pointer animate-fade-in"
+              className="group hover:shadow-elegant hover:-translate-y-1 transition-all duration-300 cursor-pointer animate-fade-in border-border/50"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardHeader>

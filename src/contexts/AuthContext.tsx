@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums } from "@/integrations/supabase/types";
 import { useAuthHealthMonitor } from "@/hooks/useAuthHealthMonitor";
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<AppRole>(null);
   const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const initialLoadComplete = useRef(false);
 
   useEffect(() => {
     console.log("🔵 AuthProvider: Initializing...");
@@ -53,9 +53,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq("user_id", user.id)
           .maybeSingle();
 
-        console.log("📊 AuthProvider Query user_roles:", { 
-          userId: user.id, 
-          data, 
+        console.log("📊 AuthProvider Query user_roles:", {
+          userId: user.id,
+          data,
           error,
           errorDetails: error ? JSON.stringify(error) : null,
           hasData: !!data,
@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) {
           console.log("✅ AuthProvider load(): Setting loading to false");
           setLoading(false);
-          setInitialLoadComplete(true);
+          initialLoadComplete.current = true;
         } else {
           console.log("⚠️ Component unmounted, not setting loading to false");
         }
@@ -123,11 +123,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔔 AuthProvider onAuthStateChange:", { event, userId: session?.user?.id, email: session?.user?.email, initialLoadComplete });
+      console.log("🔔 AuthProvider onAuthStateChange:", { event, userId: session?.user?.id, email: session?.user?.email, initialLoadComplete: initialLoadComplete.current });
 
-      // Ignorar eventos durante a carga inicial
-      if (!initialLoadComplete && event !== 'SIGNED_OUT') {
-        console.log("⏭️ Ignoring onAuthStateChange during initial load");
+      // Ignorar eventos durante a carga inicial, exceto login explícito
+      if (!initialLoadComplete.current && event !== 'SIGNED_OUT' && event !== 'SIGNED_IN') {
+        console.log("⏭️ Ignoring onAuthStateChange during initial load (event:", event, ")");
         return;
       }
 
@@ -221,7 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isHealthy, failureCount]);
 
-  console.log("🔍 AuthProvider state:", 
+  console.log("🔍 AuthProvider state:",
     "userId:", userId,
     "role:", role,
     "isAdmin:", isAdmin,

@@ -35,24 +35,28 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container relative flex h-16 items-center justify-between">
+      <div className="container relative flex h-16 items-center justify-between">
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <img src="/logo-arseg.jpg" alt="Arseg Extintores" className="w-28 h-28 object-contain" />
+          <img src="/logo-arseg.jpg" alt="Arseg Extintores" className="w-24 h-24 object-contain" />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium hover:text-secondary transition-colors">
+          <Link to="/" className="text-sm font-medium hover:text-primary transition-colors relative group">
             Início
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </Link>
-          <Link to="/produtos" className="text-sm font-medium hover:text-secondary transition-colors">
+          <Link to="/produtos" className="text-sm font-medium hover:text-primary transition-colors relative group">
             Produtos
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </Link>
-          <Link to="/orcamentos" className="text-sm font-medium hover:text-secondary transition-colors">
+          <Link to="/orcamentos" className="text-sm font-medium hover:text-primary transition-colors relative group">
             Orçamentos
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </Link>
-          <Link to="/contato" className="text-sm font-medium hover:text-secondary transition-colors">
+          <Link to="/contato" className="text-sm font-medium hover:text-primary transition-colors relative group">
             Contato
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
           </Link>
         </nav>
 
