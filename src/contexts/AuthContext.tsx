@@ -13,6 +13,7 @@ interface AuthContextType {
   isUser: boolean;
   isAuthenticated: boolean;
   loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -231,8 +232,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     "health:", isHealthy ? "✅" : "⚠️"
   );
 
+  const signOut = async () => {
+    console.log("👋 AuthProvider: Signing out...");
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+      setUserId(null);
+      setRole(null);
+      // Force immediate state update
+      initialLoadComplete.current = true;
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ userId, role, isAdmin, isSeller, isUser, isAuthenticated, loading }}>
+    <AuthContext.Provider value={{ userId, role, isAdmin, isSeller, isUser, isAuthenticated, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

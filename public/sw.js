@@ -1,5 +1,5 @@
 // Service Worker - Versão com auto-update
-const CACHE_VERSION = 'v2025-11-15-002';
+const CACHE_VERSION = 'v2025-11-15-003-debug';
 const CACHE_NAME = `arseg-cache-${CACHE_VERSION}`;
 
 self.addEventListener('install', (event) => {
@@ -35,6 +35,7 @@ self.addEventListener('fetch', (event) => {
 
   // Ignorar requisições ao Supabase (sempre buscar do servidor)
   if (event.request.url.includes('supabase.co')) {
+    console.log('[SW] Skipping Supabase request:', event.request.url);
     return;
   }
 
@@ -43,24 +44,25 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         // Clonar a resposta antes de retornar
         const responseToCache = response.clone();
-        
+
         // Cachear apenas respostas bem-sucedidas
         if (response.status === 200) {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
-        
+
         return response;
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('[SW] Fetch failed:', error, 'URL:', event.request.url);
         // Se network falhar, tentar buscar do cache
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             console.log('[SW] Serving from cache (offline):', event.request.url);
             return cachedResponse;
           }
-          
+
           // Se não estiver no cache e for uma navegação, retornar index.html
           if (event.request.mode === 'navigate') {
             return caches.match('/index.html');

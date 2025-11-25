@@ -14,12 +14,12 @@ import { supabase } from "@/integrations/supabase/client.ts";
 import { useToast } from "@/components/ui/use-toast.ts";
 
 export const Header = () => {
-  const { role, isAuthenticated } = useAuthRole();
+  const { role, isAuthenticated, signOut } = useAuthRole();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
