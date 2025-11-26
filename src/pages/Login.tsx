@@ -43,16 +43,16 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuthRole();
+  const { isAuthenticated, loading: authLoading } = useAuthRole();
 
   const from = location.state?.from?.pathname || "/";
 
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log("✅ User already authenticated, redirecting to:", from);
+    if (isAuthenticated && !authLoading) {
+      console.log("✅ User authenticated and loaded, redirecting to:", from);
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, authLoading, navigate, from]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -70,7 +70,7 @@ const Login = () => {
     setLoading(true);
     try {
       console.log("Attempting login with email:", data.email);
-      
+
       // Try to sign in
       const res: any = await (supabase as any).auth.signInWithPassword({
         email: data.email,
@@ -191,7 +191,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 flex items-center justify-center py-12 bg-muted/30">
         <div className="container max-w-md">
           <Card className="shadow-glow animate-fade-in">

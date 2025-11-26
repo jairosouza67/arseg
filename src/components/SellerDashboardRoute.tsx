@@ -14,6 +14,8 @@ export const SellerDashboardRoute = ({
   const { isSeller, isAdmin, isAuthenticated, loading } = useAuthRole();
   const location = useLocation();
 
+  console.log("🛒 SellerDashboardRoute check:", { isSeller, isAdmin, isAuthenticated, loading, path: location.pathname });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
