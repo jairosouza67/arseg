@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função centralizada para carregar role do usuário
   const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
     try {
-      debugLog("📊 Loading role for user:", userId);
+      console.log("[TEMP DEBUG] 📊 Loading role for user:", userId);
       
       const { data, error } = await supabase
         .from("user_roles")
@@ -39,18 +39,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq("user_id", userId)
         .maybeSingle();
 
+      console.log("[TEMP DEBUG] Query result:", { data, error });
+
       if (error) {
-        debugError("❌ Error fetching user role:", error);
+        console.error("[TEMP DEBUG] ❌ Error fetching user role:", error);
         return null;
       }
 
       if (data?.role) {
-        debugLog("✅ Role found:", data.role);
+        console.log("[TEMP DEBUG] ✅ Role found:", data.role);
         return data.role as AppRole;
       }
 
       // Fallback: Inferir seller a partir de quotes
-      debugLog("⚠️ No role found, attempting to infer seller...");
+      console.log("[TEMP DEBUG] ⚠️ No role found, attempting to infer seller...");
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) return null;
@@ -63,17 +65,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq("created_by", userId);
 
         if (count && count > 0) {
-          debugLog("✅ Inferred role: seller");
+          console.log("[TEMP DEBUG] ✅ Inferred role: seller");
           return "seller";
         }
       } catch (inferErr) {
-        debugWarn("⚠️ Error inferring seller role:", inferErr);
+        console.warn("[TEMP DEBUG] ⚠️ Error inferring seller role:", inferErr);
       }
 
-      debugLog("⚠️ No role could be determined");
+      console.log("[TEMP DEBUG] ⚠️ No role could be determined");
       return null;
     } catch (err) {
-      debugError("❌ Exception loading user role:", err);
+      console.error("[TEMP DEBUG] ❌ Exception loading user role:", err);
       return null;
     }
   }, []);
@@ -109,8 +111,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setUserId(session.user.id);
+      console.log("[TEMP DEBUG] About to load role for:", session.user.id);
       const userRole = await loadUserRole(session.user.id);
+      console.log("[TEMP DEBUG] Role loaded:", userRole);
       setRole(userRole);
+      console.log("[TEMP DEBUG] Role set in state");
     } catch (err) {
       debugError("❌ Error handling session change:", err);
       setRole(null);
