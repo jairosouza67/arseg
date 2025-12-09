@@ -33,16 +33,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log("[TEMP DEBUG] 📊 Loading role for user:", userId);
       
-      const { data, error } = await supabase
+      // Criar timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout after 10s')), 10000);
+      });
+
+      // Race entre query e timeout
+      const queryPromise = supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .maybeSingle();
 
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+
       console.log("[TEMP DEBUG] Query result:", { data, error });
 
       if (error) {
         console.error("[TEMP DEBUG] ❌ Error fetching user role:", error);
+        // Se for erro de RLS, tentar query direta sem RLS
+        if (error.message?.includes('permission') || error.message?.includes('policy')) {
+          console.warn("[TEMP DEBUG] ⚠️ RLS issue detected, checking if table exists...");
+        }
         return null;
       }
 

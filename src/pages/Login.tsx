@@ -43,16 +43,27 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading: authLoading } = useAuthRole();
+  const { isAuthenticated, loading: authLoading, role } = useAuthRole();
 
   const from = location.state?.from?.pathname || "/";
 
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      console.log("✅ User authenticated and loaded, redirecting to:", from);
-      navigate(from, { replace: true });
+    if (isAuthenticated && !authLoading && role) {
+      // Prevenir loop: se é seller tentando acessar /admin, redirecionar para /vendedor
+      let destination = from;
+      
+      if (role === "seller" && from === "/admin") {
+        destination = "/vendedor";
+        console.log("⚠️ Seller trying to access /admin, redirecting to /vendedor");
+      } else if (role === "admin" && from === "/vendedor") {
+        destination = "/admin";
+        console.log("⚠️ Admin trying to access /vendedor, redirecting to /admin");
+      }
+      
+      console.log("✅ User authenticated and loaded, redirecting to:", destination);
+      navigate(destination, { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate, from]);
+  }, [isAuthenticated, authLoading, role, navigate, from]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
