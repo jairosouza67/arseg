@@ -2,6 +2,7 @@
  * Script de limpeza de cache antigo
  * Executa uma única vez para limpar caches obsoletos
  */
+import { debugLog } from "@/lib/debugUtils";
 
 const CURRENT_VERSION = '2025-11-15-002';
 const VERSION_KEY = 'arseg-app-version';
@@ -10,15 +11,15 @@ const VERSION_KEY = 'arseg-app-version';
 const storedVersion = localStorage.getItem(VERSION_KEY);
 
 if (storedVersion !== CURRENT_VERSION) {
-  console.log('🧹 Nova versão detectada, limpando caches antigos...');
-  console.log('Versão anterior:', storedVersion || 'nenhuma');
-  console.log('Versão atual:', CURRENT_VERSION);
+  debugLog('🧹 Nova versão detectada, limpando caches antigos...');
+  debugLog('Versão anterior:', storedVersion || 'nenhuma');
+  debugLog('Versão atual:', CURRENT_VERSION);
 
   // Limpar todos os caches
   if ('caches' in window) {
     caches.keys().then((names) => {
       names.forEach((name) => {
-        console.log('🗑️ Deletando cache:', name);
+        debugLog('🗑️ Deletando cache:', name);
         caches.delete(name);
       });
     });
@@ -28,7 +29,7 @@ if (storedVersion !== CURRENT_VERSION) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((registration) => {
-        console.log('🗑️ Desregistrando service worker antigo');
+        debugLog('🗑️ Desregistrando service worker antigo');
         registration.unregister();
       });
     });
@@ -37,5 +38,5 @@ if (storedVersion !== CURRENT_VERSION) {
   // Salvar nova versão
   localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
   
-  console.log('✅ Limpeza concluída! Versão:', CURRENT_VERSION);
+  debugLog('✅ Limpeza concluída! Versão:', CURRENT_VERSION);
 }

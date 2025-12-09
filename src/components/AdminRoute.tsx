@@ -2,13 +2,14 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Skeleton } from "./ui/skeleton";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useEffect } from "react";
+import { debugLog } from "@/lib/debugUtils";
 
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, loading, isAuthenticated, userId, role } = useAuthRole();
   const location = useLocation();
 
   useEffect(() => {
-    console.log("🛡️ AdminRoute check:", { 
+    debugLog("🛡️ AdminRoute check:", { 
       isAdmin, 
       loading, 
       isAuthenticated, 
@@ -20,7 +21,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Aguardar carregamento
   if (loading) {
-    console.log("⏳ AdminRoute: Loading auth state...");
+    debugLog("⏳ AdminRoute: Loading auth state...");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 w-full max-w-md p-6">
@@ -34,16 +35,16 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Verificar autenticação
   if (!isAuthenticated) {
-    console.log("❌ AdminRoute: Not authenticated, redirecting to login");
+    debugLog("❌ AdminRoute: Not authenticated, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Verificar permissão de admin
   if (!isAdmin) {
-    console.log("❌ AdminRoute: Not admin (role:", role, "), redirecting to login");
+    debugLog("❌ AdminRoute: Not admin (role:", role, "), redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log("✅ AdminRoute: Access granted");
+  debugLog("✅ AdminRoute: Access granted");
   return <>{children}</>;
 };

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode, useC
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums } from "@/integrations/supabase/types";
 import type { Session } from "@supabase/supabase-js";
+import { debugLog, debugWarn, debugError } from "@/lib/debugUtils";
 
 type AppRole = Enums<"app_role"> | 'seller' | null;
 
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Função centralizada para carregar role do usuário
   const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
     try {
-      console.log("📊 Loading role for user:", userId);
+      debugLog("📊 Loading role for user:", userId);
       
       const { data, error } = await supabase
         .from("user_roles")
@@ -39,17 +40,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error("❌ Error fetching user role:", error);
+        debugError("❌ Error fetching user role:", error);
         return null;
       }
 
       if (data?.role) {
-        console.log("✅ Role found:", data.role);
+        debugLog("✅ Role found:", data.role);
         return data.role as AppRole;
       }
 
       // Fallback: Inferir seller a partir de quotes
-      console.log("⚠️ No role found, attempting to infer seller...");
+      debugLog("⚠️ No role found, attempting to infer seller...");
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) return null;
@@ -62,39 +63,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .eq("created_by", userId);
 
         if (count && count > 0) {
-          console.log("✅ Inferred role: seller");
+          debugLog("✅ Inferred role: seller");
           return "seller";
         }
       } catch (inferErr) {
-        console.error("⚠️ Error inferring seller role:", inferErr);
+        debugWarn("⚠️ Error inferring seller role:", inferErr);
       }
 
-      console.log("⚠️ No role could be determined");
+      debugLog("⚠️ No role could be determined");
       return null;
     } catch (err) {
-      console.error("❌ Exception loading user role:", err);
+      debugError("❌ Exception loading user role:", err);
       return null;
     }
   }, []);
 
   // Função para processar mudanças de sessão
   const handleSessionChange = useCallback(async (session: Session | null, event: string) => {
-    console.log("🔄 Processing session change:", { event, sessionId: session?.user?.id });
+    debugLog("🔄 Processing session change:", { event, sessionId: session?.user?.id });
 
     // Evitar processamento duplicado da mesma sessão
     if (session?.user?.id === lastSessionId.current && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
-      console.log("⏭️ Skipping duplicate session processing");
+      debugLog("⏭️ Skipping duplicate session processing");
       return;
     }
 
     // Evitar race condition: se já estamos carregando, aguardar
     if (isLoadingRole.current) {
-      console.log("⏳ Already loading role, skipping...");
+      debugLog("⏳ Already loading role, skipping...");
       return;
     }
 
     if (!session?.user) {
-      console.log("⚠️ No session, clearing auth state");
+      debugLog("⚠️ No session, clearing auth state");
       setUserId(null);
       setRole(null);
       setLoading(false);
@@ -111,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userRole = await loadUserRole(session.user.id);
       setRole(userRole);
     } catch (err) {
-      console.error("❌ Error handling session change:", err);
+      debugError("❌ Error handling session change:", err);
       setRole(null);
     } finally {
       isLoadingRole.current = false;

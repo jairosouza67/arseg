@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Skeleton } from "./ui/skeleton";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useEffect } from "react";
+import { debugLog } from "@/lib/debugUtils";
 
 interface SellerDashboardRouteProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ export const SellerDashboardRoute = ({
   const location = useLocation();
 
   useEffect(() => {
-    console.log("🛒 SellerDashboardRoute check:", { 
+    debugLog("🛒 SellerDashboardRoute check:", { 
       isSeller, 
       isAdmin, 
       isAuthenticated, 
@@ -28,7 +29,7 @@ export const SellerDashboardRoute = ({
   }, [isSeller, isAdmin, isAuthenticated, loading, userId, role, location.pathname]);
 
   if (loading) {
-    console.log("⏳ SellerDashboardRoute: Loading auth state...");
+    debugLog("⏳ SellerDashboardRoute: Loading auth state...");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 w-full max-w-md p-6">
@@ -41,15 +42,15 @@ export const SellerDashboardRoute = ({
   }
 
   if (!isAuthenticated) {
-    console.log("❌ SellerDashboardRoute: Not authenticated");
+    debugLog("❌ SellerDashboardRoute: Not authenticated");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (isSeller || (allowAdminAlso && isAdmin)) {
-    console.log("✅ SellerDashboardRoute: Access granted");
+    debugLog("✅ SellerDashboardRoute: Access granted");
     return <>{children}</>;
   }
 
-  console.log("❌ SellerDashboardRoute: Access denied, role:", role);
+  debugLog("❌ SellerDashboardRoute: Access denied, role:", role);
   return <Navigate to="/" replace />;
 };

@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ChevronDown, ChevronUp, Trash2, FileDown } from "lucide-react";
 import { generateQuotePDF } from "@/lib/generateQuotePDF";
 import { createRenewalReminder } from "@/lib/renewalReminders";
+import { formatDate } from "@/lib/dateUtils";
+import { getQuoteStatusBadge } from "@/lib/statusUtils";
 import {
   Select,
   SelectContent,
@@ -58,52 +60,9 @@ const Quotes = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<
-      string,
-      { label: string; className: string }
-    > = {
-      pending: {
-        label: "Pendente",
-        className:
-          "bg-yellow-100 text-yellow-800 border border-yellow-200",
-      },
-      approved: {
-        label: "Aprovado",
-        className:
-          "bg-green-100 text-green-800 border border-green-200",
-      },
-      rejected: {
-        label: "Rejeitado",
-        className:
-          "bg-red-100 text-red-800 border border-red-200",
-      },
-    };
+  // Status badge function moved to @/lib/statusUtils
 
-    const statusInfo =
-      statusMap[status] || {
-        label: status,
-        className: "bg-muted text-foreground",
-      };
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-semibold ${statusInfo.className}`}
-      >
-        {statusInfo.label}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // Date formatting function moved to @/lib/dateUtils
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -124,7 +83,6 @@ const Quotes = () => {
 
     if (error) {
       console.error("Erro detalhado ao atualizar status:", error);
-      await supabase.from('approval_audit').insert({ quote_id: id, approver_user_id: (await supabase.auth.getUser()).data.user?.id, approver_role: 'admin', approved_at: null, success: false, error: error.message });
       toast({
         variant: "destructive",
         title: "Erro ao atualizar status",
@@ -150,7 +108,6 @@ const Quotes = () => {
           });
         } catch (reminderError) {
           console.error("Erro ao criar lembrete:", reminderError);
-          await supabase.from('approval_audit').insert({ quote_id: quote.id, approver_user_id: (await supabase.auth.getUser()).data.user?.id, approver_role: 'admin', approved_at: data.approved_at ?? null, success: false, error: String(reminderError) });
           toast({
             title: "Status atualizado",
             description:
@@ -276,7 +233,7 @@ const Quotes = () => {
                         >
                           <SelectTrigger className="w-28">
                             <SelectValue>
-                              {getStatusBadge(quote.status)}
+                              {getQuoteStatusBadge(quote.status)}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>

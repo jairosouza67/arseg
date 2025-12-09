@@ -13,6 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Trash2, Send, CheckCircle, XCircle, Clock } from "lucide-react";
 import { getAllReminders, updateReminderStatus, deleteReminder, sendPendingReminders } from "@/lib/renewalReminders";
 import type { RenewalReminder } from "@/lib/renewalReminders";
+import { formatDate } from "@/lib/dateUtils";
+import { getReminderStatusBadge } from "@/lib/statusUtils";
 
 const RenewalReminders = () => {
   const navigate = useNavigate();

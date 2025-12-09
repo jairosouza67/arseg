@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button";
 import { Flame, Menu, LogOut } from "lucide-react";
 import {
   Sheet,
@@ -8,10 +8,10 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "@/components/ui/sheet.tsx";
-import { useAuthRole } from "@/hooks/useAuthRole.tsx";
-import { supabase } from "@/integrations/supabase/client.ts";
-import { useToast } from "@/components/ui/use-toast.ts";
+} from "@/components/ui/sheet";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const Header = () => {
   const { role, isAuthenticated, signOut } = useAuthRole();

@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ChevronDown, ChevronUp, Trash2, FileDown } from "lucide-react";
 import { generateQuotePDF } from "@/lib/generateQuotePDF";
+import { formatDate } from "@/lib/dateUtils";
+import { getQuoteStatusBadge } from "@/lib/statusUtils";
 
 const SellerQuotes = () => {
   const { userId, loading } = useAuthRole();
@@ -68,25 +70,7 @@ const SellerQuotes = () => {
     setQuotes(data || []);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      pending: { label: "Pendente", className: "bg-yellow-100 text-yellow-800 border border-yellow-200" },
-      approved: { label: "Aprovado", className: "bg-green-100 text-green-800 border border-green-200" },
-      rejected: { label: "Rejeitado", className: "bg-red-100 text-red-800 border border-red-200" },
-    };
-    const statusInfo = statusMap[status] || { label: status, className: "bg-muted text-foreground" };
-    return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusInfo.className}`}>{statusInfo.label}</span>;
-  };
+  // Date formatting and status badge functions moved to lib utilities
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -169,7 +153,7 @@ const SellerQuotes = () => {
                       <TableCell className="align-top">
                         <Select value={quote.status} onValueChange={(value) => handleStatusChange(quote.id, value)}>
                           <SelectTrigger className="w-28">
-                            <SelectValue>{getStatusBadge(quote.status)}</SelectValue>
+                            <SelectValue>{getQuoteStatusBadge(quote.status)}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pending">Pendente</SelectItem>

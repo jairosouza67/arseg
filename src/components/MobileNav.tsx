@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Package, FileText, MessageSquare, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 const navItems = [
   { href: "/", label: "Início", icon: Home },
@@ -11,7 +11,7 @@ const navItems = [
 
 export const MobileNav = () => {
   const location = useLocation();
-  const { isAdmin } = useUserRole();
+  const { isAdmin } = useAuthRole();
 
   const finalNavItems = [
     ...navItems,
