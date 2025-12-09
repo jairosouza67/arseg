@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Download } from "lucide-react";
 
 interface Product {
   id: string;
@@ -149,6 +149,61 @@ const Products = () => {
     setEditingProduct(null);
   };
 
+  const bulkImportFireExtinguishers = async () => {
+    if (!confirm('Deseja adicionar todos os extintores de incêndio ao catálogo? Esta operação adicionará 27 produtos.')) return;
+
+    const fireExtinguishers = [
+      // Extintores Veiculares Pó ABC
+      { name: 'Extintor Veicular Pó ABC 1kg', type: 'Pó ABC', description: 'Extintor veicular portátil de pó químico ABC 1kg', in_stock: true, price: 0 },
+      { name: 'Extintor Veicular Pó ABC 2kg', type: 'Pó ABC', description: 'Extintor veicular portátil de pó químico ABC 2kg', in_stock: true, price: 0 },
+      // Extintores de Pó BC
+      { name: 'Extintor de Pó BC 4kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 4kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC 6kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 6kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC 8kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 8kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC 10kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 10kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC 12kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 12kg', in_stock: true, price: 0 },
+      // Extintores de Pó BC Carreta
+      { name: 'Extintor de Pó BC Carreta 20kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 20kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC Carreta 30kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 30kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC Carreta 50kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 50kg', in_stock: true, price: 0 },
+      // Extintores de Pó ABC
+      { name: 'Extintor de Pó ABC 4kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 4kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC 6kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 6kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC 8kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 8kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC 10kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 10kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC 12kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 12kg', in_stock: true, price: 0 },
+      // Extintores de Pó ABC Carreta
+      { name: 'Extintor de Pó ABC Carreta 20kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 20kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC Carreta 30kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 30kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC Carreta 50kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 50kg', in_stock: true, price: 0 },
+      // Extintores CO2
+      { name: 'Extintor CO2 4kg', type: 'CO₂', description: 'Extintor portátil de dióxido de carbono 4kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 6kg', type: 'CO₂', description: 'Extintor portátil de dióxido de carbono 6kg', in_stock: true, price: 0 },
+      // Extintores CO2 Carreta
+      { name: 'Extintor CO2 Carreta 10kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 10kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 Carreta 20kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 20kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 Carreta 30kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 30kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 Carreta 40kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 40kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 Carreta 50kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 50kg', in_stock: true, price: 0 },
+    ];
+
+    const { error } = await supabase.from('products').insert(fireExtinguishers);
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível importar os produtos. Verifique se já existem produtos com os mesmos nomes.',
+      });
+    } else {
+      toast({
+        title: 'Sucesso',
+        description: '27 produtos de extintores foram adicionados ao catálogo.',
+      });
+      fetchProducts();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -162,13 +217,18 @@ const Products = () => {
             <h1 className="text-4xl font-bold">Produtos</h1>
             <p className="text-muted-foreground">Gerencie o catálogo de produtos</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => openDialog()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={bulkImportFireExtinguishers}>
+              <Download className="mr-2 h-4 w-4" />
+              Importar Extintores
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => openDialog()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Produto
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
@@ -233,6 +293,7 @@ const Products = () => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <Card>
