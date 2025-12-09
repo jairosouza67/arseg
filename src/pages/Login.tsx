@@ -69,65 +69,55 @@ const Login = () => {
   const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     try {
-      console.log("Attempting login with email:", data.email);
+      console.log("🔑 Attempting login with email:", data.email);
 
-      // Try to sign in
-      const res: any = await (supabase as any).auth.signInWithPassword({
+      // Realizar login
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      // Log full response for debugging
-      console.log("signInWithPassword response:", res);
-      console.log("Response data:", res.data);
-      console.log("Response error:", res.error);
-
-      const authData = res.data;
-      const error = res.error;
-
       if (error) {
-        // show detailed error to user
-        console.error("Login error details:", {
-          message: error.message,
-          status: error.status,
-          name: error.name,
-          code: error.code,
-          details: JSON.stringify(error, null, 2)
-        });
-        console.error("Full error object:", error);
+        console.error("❌ Login error:", error);
         throw error;
       }
 
-      // Ensure session/user is available (some environments need explicit getUser/getSession)
-      const waitForSession = async (retries = 10, delay = 300) => {
-        for (let i = 0; i < retries; i++) {
-          const sessionRes: any = await (supabase as any).auth.getSession();
-          console.debug("getSession attempt", i, sessionRes);
-          if (sessionRes?.data?.session) return sessionRes;
-          await new Promise((r) => setTimeout(r, delay));
-        }
-        return await (supabase as any).auth.getSession();
-      };
+      console.log("✅ Login successful, user:", authData.user?.id);
 
-      const sessionRes: any = await waitForSession(10, 300);
-      console.debug("getSession response after sign-in (final):", sessionRes);
+      // Aguardar confirmação da sessão
+      let sessionConfirmed = false;
+      for (let i = 0; i < 20; i++) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          sessionConfirmed = true;
+          console.log("✅ Session confirmed after", i + 1, "attempts");
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 200));
+      }
+
+      if (!sessionConfirmed) {
+        throw new Error("❌ Session not established after login");
+      }
 
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta.",
       });
 
-      // Aguardar useAuthRole carregar a role antes de navegar
-      console.log("⏳ Aguardando 1.5s para useAuthRole carregar...");
-      await new Promise((r) => setTimeout(r, 1500));
+      // Aguardar AuthContext processar o login (máximo 3 segundos)
+      console.log("⏳ Waiting for AuthContext to process login...");
+      await new Promise((r) => setTimeout(r, 1000));
 
-      console.log("Navegando para:", from);
+      // Navegar para destino
+      console.log("➡️ Navigating to:", from);
       navigate(from, { replace: true });
     } catch (error: any) {
+      console.error("❌ Login failed:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message || JSON.stringify(error),
+        description: error.message || "Verifique suas credenciais e tente novamente.",
       });
     } finally {
       setLoading(false);

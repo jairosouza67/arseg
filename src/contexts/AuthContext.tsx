@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums } from "@/integrations/supabase/types";
-import { useAuthHealthMonitor } from "@/hooks/useAuthHealthMonitor";
+import type { Session } from "@supabase/supabase-js";
 
 type AppRole = Enums<"app_role"> | 'seller' | null;
 
@@ -14,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,181 +24,158 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<AppRole>(null);
   const [loading, setLoading] = useState(true);
   const initialLoadComplete = useRef(false);
+  const isLoadingRole = useRef(false);
+  const lastSessionId = useRef<string | null>(null);
+
+  // Função centralizada para carregar role do usuário
+  const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
+    try {
+      console.log("📊 Loading role for user:", userId);
+      
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("❌ Error fetching user role:", error);
+        return null;
+      }
+
+      if (data?.role) {
+        console.log("✅ Role found:", data.role);
+        return data.role as AppRole;
+      }
+
+      // Fallback: Inferir seller a partir de quotes
+      console.log("⚠️ No role found, attempting to infer seller...");
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return null;
+
+      try {
+        // Simplificado para evitar problemas de tipo no TypeScript
+        const { count } = await (supabase as any)
+          .from("quotes")
+          .select("*", { count: 'exact', head: true })
+          .eq("created_by", userId);
+
+        if (count && count > 0) {
+          console.log("✅ Inferred role: seller");
+          return "seller";
+        }
+      } catch (inferErr) {
+        console.error("⚠️ Error inferring seller role:", inferErr);
+      }
+
+      console.log("⚠️ No role could be determined");
+      return null;
+    } catch (err) {
+      console.error("❌ Exception loading user role:", err);
+      return null;
+    }
+  }, []);
+
+  // Função para processar mudanças de sessão
+  const handleSessionChange = useCallback(async (session: Session | null, event: string) => {
+    console.log("🔄 Processing session change:", { event, sessionId: session?.user?.id });
+
+    // Evitar processamento duplicado da mesma sessão
+    if (session?.user?.id === lastSessionId.current && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
+      console.log("⏭️ Skipping duplicate session processing");
+      return;
+    }
+
+    // Evitar race condition: se já estamos carregando, aguardar
+    if (isLoadingRole.current) {
+      console.log("⏳ Already loading role, skipping...");
+      return;
+    }
+
+    if (!session?.user) {
+      console.log("⚠️ No session, clearing auth state");
+      setUserId(null);
+      setRole(null);
+      setLoading(false);
+      lastSessionId.current = null;
+      return;
+    }
+
+    isLoadingRole.current = true;
+    setLoading(true);
+    lastSessionId.current = session.user.id;
+
+    try {
+      setUserId(session.user.id);
+      const userRole = await loadUserRole(session.user.id);
+      setRole(userRole);
+    } catch (err) {
+      console.error("❌ Error handling session change:", err);
+      setRole(null);
+    } finally {
+      isLoadingRole.current = false;
+      setLoading(false);
+    }
+  }, [loadUserRole]);
 
   useEffect(() => {
     console.log("🔵 AuthProvider: Initializing...");
     let isMounted = true;
 
-    const load = async () => {
+    const initialize = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        // Obter sessão atual
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("❌ Error getting initial session:", error);
+          setLoading(false);
+          initialLoadComplete.current = true;
+          return;
+        }
 
-        console.log("🔄 AuthProvider load() - getUser result:", { user: user?.id, email: user?.email });
+        console.log("🔄 Initial session:", { userId: session?.user?.id, email: session?.user?.email });
 
         if (!isMounted) return;
 
-        if (!user) {
+        if (session?.user) {
+          await handleSessionChange(session, 'INITIAL_LOAD');
+        } else {
           setUserId(null);
           setRole(null);
           setLoading(false);
-          return;
-        }
-
-        setUserId(user.id);
-
-        // Query user_roles table
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        console.log("📊 AuthProvider Query user_roles:", {
-          userId: user.id,
-          data,
-          error,
-          errorDetails: error ? JSON.stringify(error) : null,
-          hasData: !!data,
-          roleValue: data?.role
-        });
-
-        if (!isMounted) {
-          console.log("⚠️ Component unmounted before role query completed");
-          return;
-        }
-
-        if (error) {
-          console.error("❌ Erro ao buscar papel do usuário:", error);
-          setRole(null);
-        } else if (data?.role) {
-          console.log("✅ Role encontrada:", data.role);
-          setRole(data.role as AppRole);
-        } else {
-          console.log("⚠️ Nenhuma role encontrada, tentando inferir...");
-
-          // Fallback: try to infer seller from quotes
-          try {
-            const userEmail = user.email ?? null;
-            let quotesRes: any;
-            if (userEmail) {
-              quotesRes = await supabase
-                .from("quotes")
-                .select("id")
-                .or(`created_by.eq.${user.id},customer_email.eq.${userEmail}`)
-                .limit(1);
-            } else {
-              quotesRes = await supabase
-                .from("quotes")
-                .select("id")
-                .eq("created_by", user.id)
-                .limit(1);
-            }
-
-            if (!quotesRes.error && quotesRes.data && quotesRes.data.length > 0) {
-              setRole("seller");
-            } else {
-              setRole(null);
-            }
-          } catch (err) {
-            console.error("Erro ao inferir papel do usuário:", err);
-            setRole(null);
-          }
         }
       } catch (err) {
-        console.error("Erro ao carregar papel do usuário:", err);
+        console.error("❌ Error initializing auth:", err);
+        setUserId(null);
         setRole(null);
+        setLoading(false);
       } finally {
         if (isMounted) {
-          console.log("✅ AuthProvider load(): Setting loading to false");
-          setLoading(false);
           initialLoadComplete.current = true;
-        } else {
-          console.log("⚠️ Component unmounted, not setting loading to false");
         }
       }
     };
 
-    load();
+    initialize();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔔 AuthProvider onAuthStateChange:", { event, userId: session?.user?.id, email: session?.user?.email, initialLoadComplete: initialLoadComplete.current });
-
-      // Ignorar eventos durante a carga inicial, exceto login explícito
-      if (!initialLoadComplete.current && event !== 'SIGNED_OUT' && event !== 'SIGNED_IN') {
-        console.log("⏭️ Ignoring onAuthStateChange during initial load (event:", event, ")");
-        return;
-      }
+    // Listener de mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🔔 Auth state changed:", { event, userId: session?.user?.id });
 
       if (!isMounted) {
-        console.log("⚠️ Component unmounted during onAuthStateChange");
+        console.log("⚠️ Component unmounted, ignoring state change");
         return;
       }
 
-      if (!session?.user) {
-        console.log("⚠️ Session lost or signed out, event:", event);
-        setUserId(null);
-        setRole(null);
-        setLoading(false);
-      } else {
-        setUserId(session.user.id);
-        setLoading(true);
-
-        try {
-          const { data, error } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .maybeSingle();
-
-          if (error) {
-            console.error("Erro ao atualizar papel do usuário:", error);
-            setRole(null);
-          } else if (data?.role) {
-            console.log("✅ onAuthStateChange: Role encontrada:", data.role);
-            setRole(data.role as AppRole);
-          } else {
-            // Inferir seller
-            try {
-              const userEmail = session.user.email ?? null;
-              let quotesRes: any;
-              if (userEmail) {
-                quotesRes = await supabase
-                  .from("quotes")
-                  .select("id")
-                  .or(`created_by.eq.${session.user.id},customer_email.eq.${userEmail}`)
-                  .limit(1);
-              } else {
-                quotesRes = await supabase
-                  .from("quotes")
-                  .select("id")
-                  .eq("created_by", session.user.id)
-                  .limit(1);
-              }
-
-              if (!quotesRes.error && quotesRes.data && quotesRes.data.length > 0) {
-                setRole("seller");
-              } else {
-                setRole(null);
-              }
-            } catch (err) {
-              console.error("Erro ao inferir papel do usuário:", err);
-              setRole(null);
-            }
-          }
-        } catch (err) {
-          console.error("Erro ao lidar com onAuthStateChange:", err);
-          setRole(null);
-        } finally {
-          if (isMounted) {
-            console.log("✅ onAuthStateChange: Setting loading to false");
-            setLoading(false);
-          }
-        }
+      // Ignorar eventos durante carga inicial, exceto SIGNED_IN e SIGNED_OUT
+      if (!initialLoadComplete.current && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
+        console.log("⏭️ Skipping event during initial load:", event);
+        return;
       }
+
+      await handleSessionChange(session, event);
     });
 
     return () => {
@@ -205,32 +183,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [handleSessionChange]);
 
   const isAdmin = role === "admin";
   const isSeller = role === "seller";
   const isUser = !role;
   const isAuthenticated = !!userId;
 
-  // Monitor de saúde da autenticação
-  const { isHealthy, failureCount } = useAuthHealthMonitor(userId, role, isAuthenticated);
-
-  // Alertar no console se houver problemas
+  // Log do estado atual
   useEffect(() => {
-    if (!isHealthy && failureCount > 0) {
-      console.warn(`⚠️ Auth health degraded: ${failureCount} consecutive failures`);
-    }
-  }, [isHealthy, failureCount]);
+    console.log("🔍 AuthProvider state:",
+      "userId:", userId,
+      "role:", role,
+      "isAdmin:", isAdmin,
+      "isSeller:", isSeller,
+      "isAuthenticated:", isAuthenticated,
+      "loading:", loading
+    );
+  }, [userId, role, isAdmin, isSeller, isAuthenticated, loading]);
 
-  console.log("🔍 AuthProvider state:",
-    "userId:", userId,
-    "role:", role,
-    "isAdmin:", isAdmin,
-    "isSeller:", isSeller,
-    "isAuthenticated:", isAuthenticated,
-    "loading:", loading,
-    "health:", isHealthy ? "✅" : "⚠️"
-  );
+  // Função para forçar refresh da autenticação
+  const refreshAuth = useCallback(async () => {
+    console.log("🔄 Manually refreshing auth state...");
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await handleSessionChange(session, 'MANUAL_REFRESH');
+    } catch (err) {
+      console.error("❌ Error refreshing auth:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [handleSessionChange]);
 
   const signOut = async () => {
     console.log("👋 AuthProvider: Signing out...");
@@ -249,7 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ userId, role, isAdmin, isSeller, isUser, isAuthenticated, loading, signOut }}>
+    <AuthContext.Provider value={{ userId, role, isAdmin, isSeller, isUser, isAuthenticated, loading, signOut, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   );

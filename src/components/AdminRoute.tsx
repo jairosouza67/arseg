@@ -1,15 +1,26 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { Skeleton } from "./ui/skeleton";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { useEffect } from "react";
 
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdmin, loading, isAuthenticated } = useAuthRole();
+  const { isAdmin, loading, isAuthenticated, userId, role } = useAuthRole();
   const location = useLocation();
 
-  console.log("🛡️ AdminRoute check:", { isAdmin, loading, isAuthenticated, path: location.pathname });
+  useEffect(() => {
+    console.log("🛡️ AdminRoute check:", { 
+      isAdmin, 
+      loading, 
+      isAuthenticated, 
+      userId, 
+      role,
+      path: location.pathname 
+    });
+  }, [isAdmin, loading, isAuthenticated, userId, role, location.pathname]);
 
+  // Aguardar carregamento
   if (loading) {
-    console.log("⏳ AdminRoute: Still loading...");
+    console.log("⏳ AdminRoute: Loading auth state...");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 w-full max-w-md p-6">
@@ -21,8 +32,15 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
-    console.log("❌ AdminRoute: Access denied, redirecting to login");
+  // Verificar autenticação
+  if (!isAuthenticated) {
+    console.log("❌ AdminRoute: Not authenticated, redirecting to login");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Verificar permissão de admin
+  if (!isAdmin) {
+    console.log("❌ AdminRoute: Not admin (role:", role, "), redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
