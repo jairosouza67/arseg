@@ -17,7 +17,9 @@ import AdminCustomers from "@/pages/admin/Customers.tsx";
 import AdminSuppliers from "@/pages/admin/Suppliers.tsx";
 import UsersPage from "@/pages/admin/Users.tsx";
 import RenewalReminders from "@/pages/admin/RenewalReminders.tsx";
-import { Sidebar, SidebarProvider } from "@/components/ui/sidebar.tsx";
+import { SidebarProvider } from "@/components/ui/sidebar.tsx";
+import { AdminSidebar } from "@/components/AdminSidebar";
+import { SellerSidebar } from "@/components/SellerSidebar";
 import { Toaster } from "@/components/ui/sonner.tsx";
 
 const AppRouter = () => {
@@ -41,8 +43,8 @@ const AppRouter = () => {
           element={
             <SellerDashboardRoute>
               <SidebarProvider>
-                <div className="flex">
-                  <Sidebar />
+                <div className="flex min-h-screen">
+                  <SellerSidebar />
                   <main className="flex-1 p-6">
                     <Outlet />
                   </main>
@@ -62,8 +64,8 @@ const AppRouter = () => {
           element={
             <AdminRoute>
               <SidebarProvider>
-                <div className="flex">
-                  <Sidebar />
+                <div className="flex min-h-screen">
+                  <AdminSidebar />
                   <main className="flex-1 p-6">
                     <Outlet />
                   </main>

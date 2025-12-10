@@ -30,66 +30,78 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Função centralizada para carregar role do usuário
   const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
-    try {
-      console.log("[TEMP DEBUG] 📊 Loading role for user:", userId);
-      
-      // Criar timeout promise
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout after 10s')), 10000);
-      });
+    const MAX_RETRIES = 2;
+    const TIMEOUT_MS = 10000; // 10 seconds timeout
 
-      // Race entre query e timeout
-      const queryPromise = supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-
-      console.log("[TEMP DEBUG] Query result:", { data, error });
-
-      if (error) {
-        console.error("[TEMP DEBUG] ❌ Error fetching user role:", error);
-        // Se for erro de RLS, tentar query direta sem RLS
-        if (error.message?.includes('permission') || error.message?.includes('policy')) {
-          console.warn("[TEMP DEBUG] ⚠️ RLS issue detected, checking if table exists...");
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          console.log(`[TEMP DEBUG] 🔄 Retry attempt ${attempt}/${MAX_RETRIES}`);
+          // Exponential backoff: wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
+
+        console.log("[TEMP DEBUG] 📊 Loading role for user:", userId);
+        console.log("[TEMP DEBUG] ⏱️ Query start time:", new Date().toISOString());
+
+        const startTime = performance.now();
+
+        // Criar timeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error(`Query timeout after ${TIMEOUT_MS / 1000}s`));
+          }, TIMEOUT_MS);
+        });
+
+        // Query com timeout
+        const queryPromise = supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const result = await Promise.race([queryPromise, timeoutPromise]);
+        const { data, error } = result as any;
+
+        const endTime = performance.now();
+        console.log("[TEMP DEBUG] ⏱️ Query completed in:", (endTime - startTime).toFixed(2), "ms");
+        console.log("[TEMP DEBUG] Query result:", { data, error });
+
+        // Check for network/offline errors (503 from SW or fetch errors)
+        if (error?.message?.includes('offline') || error?.message?.includes('Network')) {
+          console.warn("[TEMP DEBUG] ⚠️ Network error detected, will retry");
+          if (attempt < MAX_RETRIES) continue;
+          return null;
+        }
+
+        if (error) {
+          console.error("[TEMP DEBUG] ❌ Error fetching user role:", error);
+          if (attempt < MAX_RETRIES) continue;
+          return null;
+        }
+
+        if (data?.role) {
+          console.log("[TEMP DEBUG] ✅ Role found:", data.role);
+          return data.role as AppRole;
+        }
+
+        console.log("[TEMP DEBUG] ⚠️ No role found in database");
+        return null;
+      } catch (err: any) {
+        console.error(`[TEMP DEBUG] ❌ Exception loading user role (attempt ${attempt + 1}):`, err);
+
+        // If timeout or network error, retry
+        if (err.message?.includes('timeout') || err.message?.includes('Network')) {
+          if (attempt < MAX_RETRIES) {
+            console.log("[TEMP DEBUG] 🔄 Will retry after error");
+            continue;
+          }
+        }
+
         return null;
       }
-
-      if (data?.role) {
-        console.log("[TEMP DEBUG] ✅ Role found:", data.role);
-        return data.role as AppRole;
-      }
-
-      // Fallback: Inferir seller a partir de quotes
-      console.log("[TEMP DEBUG] ⚠️ No role found, attempting to infer seller...");
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return null;
-
-      try {
-        // Simplificado para evitar problemas de tipo no TypeScript
-        const { count } = await (supabase as any)
-          .from("quotes")
-          .select("*", { count: 'exact', head: true })
-          .eq("created_by", userId);
-
-        if (count && count > 0) {
-          console.log("[TEMP DEBUG] ✅ Inferred role: seller");
-          return "seller";
-        }
-      } catch (inferErr) {
-        console.warn("[TEMP DEBUG] ⚠️ Error inferring seller role:", inferErr);
-      }
-
-      console.log("[TEMP DEBUG] ⚠️ No role could be determined");
-      return null;
-    } catch (err) {
-      console.error("[TEMP DEBUG] ❌ Exception loading user role:", err);
-      return null;
     }
+    return null;
   }, []);
 
   // Função para processar mudanças de sessão
@@ -145,7 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         // Obter sessão atual
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error("❌ Error getting initial session:", error);
           setLoading(false);

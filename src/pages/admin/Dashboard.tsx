@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp, UserCog, Bell } from "lucide-react";
+import { Users, FileText, Building2, Package, AlertTriangle, TrendingUp, Bell } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { useRenewalReminders } from "@/hooks/useRenewalReminders";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     customers: 0,
     suppliers: 0,
@@ -119,15 +114,13 @@ const Dashboard = () => {
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Painel Administrativo</h1>
-          <p className="text-muted-foreground">Visão geral do sistema</p>
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-4xl font-bold mb-2">Painel Administrativo</h1>
+        <p className="text-muted-foreground">Visão geral do sistema</p>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Clientes</CardTitle>
@@ -171,10 +164,10 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">Total de produtos no catálogo</p>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        {/* Alertas de Lembretes Pendentes */}
-        {pendingReminders.length > 0 && (
+      {/* Alertas de Lembretes Pendentes */}
+      {pendingReminders.length > 0 && (
           <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
@@ -186,20 +179,20 @@ const Dashboard = () => {
               <p className="text-orange-700 dark:text-orange-300 mb-4">
                 Você tem {pendingReminders.length} lembrete(s) de renovação de extintores para enviar.
               </p>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/admin/lembretes")}
-                className="border-orange-600 text-orange-700 hover:bg-orange-100 dark:border-orange-400 dark:text-orange-300 dark:hover:bg-orange-900"
-              >
+            <Button
+              variant="outline"
+              onClick={() => window.location.href = "/admin/lembretes"}
+              className="border-orange-600 text-orange-700 hover:bg-orange-100 dark:border-orange-400 dark:text-orange-300 dark:hover:bg-orange-900"
+            >
                 <Bell className="mr-2 h-4 w-4" />
                 Ver Lembretes
               </Button>
             </CardContent>
           </Card>
-        )}
+      )}
 
-        {/* Analytics Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Quotes by Status */}
           <Card>
             <CardHeader>
@@ -216,7 +209,7 @@ const Dashboard = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ status, percentage }) => `${status}: ${percentage.toFixed(0)}%`}
+                    label={(entry: any) => `${entry.status}: ${entry.percentage.toFixed(0)}%`}
                     outerRadius={80}
                     fill="hsl(var(--primary))"
                     dataKey="count"
@@ -255,10 +248,10 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        {/* Recent Quotes */}
-        <Card className="mb-8">
+      {/* Recent Quotes */}
+      <Card>
           <CardHeader>
             <CardTitle>Orçamentos Recentes</CardTitle>
           </CardHeader>
@@ -280,67 +273,8 @@ const Dashboard = () => {
                 ))
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              variant="outline"
-              className="border border-border hover:bg-accent"
-              onClick={() => navigate("/admin/clientes")}
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Gerenciar Clientes
-            </Button>
-            <Button
-              variant="outline"
-              className="border border-border hover:bg-accent"
-              onClick={() => navigate("/admin/fornecedores")}
-            >
-              <Building2 className="mr-2 h-4 w-4" />
-              Gerenciar Fornecedores
-            </Button>
-            <Button
-              variant="outline"
-              className="border border-border hover:bg-accent"
-              onClick={() => navigate("/admin/orcamentos")}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Ver Orçamentos
-            </Button>
-            <Button
-              variant="outline"
-              className="border border-border hover:bg-accent"
-              onClick={() => navigate("/admin/lembretes")}
-            >
-              <Bell className="mr-2 h-4 w-4" />
-              Lembretes de Renovação
-            </Button>
-            <Button
-              variant="outline"
-              className="border border-border hover:bg-accent"
-              onClick={() => navigate("/admin/produtos")}
-            >
-              <Package className="mr-2 h-4 w-4" />
-              Gerenciar Produtos
-            </Button>
-            <Button
-              variant="outline"
-              className="border border-border hover:bg-accent"
-              onClick={() => navigate("/admin/usuarios")}
-            >
-              <UserCog className="mr-2 h-4 w-4" />
-              Gerenciar Usuários
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-      <Footer />
+        </CardContent>
+      </Card>
     </div>
   );
 };
