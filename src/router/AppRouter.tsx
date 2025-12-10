@@ -23,6 +23,8 @@ import { SellerSidebar } from "@/components/SellerSidebar";
 import { Toaster } from "@/components/ui/sonner.tsx";
 import { Header } from "@/components/Header";
 
+import { ScrollToTop } from "@/components/ScrollToTop";
+
 const AppRouter = () => {
   return (
     <Router
@@ -31,6 +33,7 @@ const AppRouter = () => {
         v7_relativeSplatPath: true,
       }}
     >
+      <ScrollToTop />
       <Toaster />
       <Routes>
         <Route path="/" element={<Index />} />
