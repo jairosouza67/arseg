@@ -49,17 +49,18 @@ export const ProductCategories = () => {
           {categories.map((category, index) => (
             <Card
               key={category.title}
-              className="group hover:shadow-elegant hover:-translate-y-1 transition-all duration-300 cursor-pointer animate-fade-in border-border/50"
+              className="group relative overflow-hidden bg-card/50 backdrop-blur-sm border-primary/10 hover:border-primary/40 hover:shadow-elegant hover:-translate-y-1 transition-all duration-300 cursor-pointer animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <CardHeader>
-                <div className={`w-12 h-12 rounded-lg bg-muted flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${category.color}`}>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <CardHeader className="relative z-10">
+                <div className={`w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 ${category.color}`}>
                   <category.icon className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-xl">{category.title}</CardTitle>
+                <CardTitle className="text-xl group-hover:text-primary transition-colors">{category.title}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">
+              <CardContent className="relative z-10">
+                <CardDescription className="text-base text-muted-foreground/80 group-hover:text-muted-foreground transition-colors">
                   {category.description}
                 </CardDescription>
               </CardContent>

@@ -6,7 +6,7 @@ export const Hero = () => {
   return (
     <section className="relative min-h-[700px] flex items-center justify-center overflow-hidden bg-background">
       {/* Background with Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/30 to-background"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/50 to-background"></div>
 
       {/* Elegant red light elements */}
       {/* Elegant red light elements - Reduced intensity */}
@@ -19,12 +19,14 @@ export const Hero = () => {
         <img
           src="/products/extintor-abc.png"
           alt=""
-          className="absolute -left-20 top-20 w-96 opacity-10 -rotate-12 blur-[1px]"
+          className="absolute -left-20 top-20 w-96 opacity-20 -rotate-12 blur-[1px] animate-float"
+          style={{ animationDelay: "0s" }}
         />
         <img
           src="/products/extintor-co2.png"
           alt=""
-          className="absolute -right-20 bottom-0 w-96 opacity-10 rotate-12 blur-[1px]"
+          className="absolute -right-20 bottom-0 w-96 opacity-20 rotate-12 blur-[1px] animate-float"
+          style={{ animationDelay: "1.5s" }}
         />
       </div>
 
@@ -49,10 +51,13 @@ export const Hero = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-2">
-            <Button asChild size="lg" className="w-full sm:w-auto shadow-elegant shadow-primary/20">
-              <Link to="/produtos">Ver Produtos</Link>
+            <Button asChild size="lg" className="w-full sm:w-auto shadow-elegant shadow-primary/20 relative overflow-hidden group">
+              <Link to="/produtos">
+                <span className="relative z-10">Ver Produtos</span>
+                <span className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 group-hover:animate-shine" />
+              </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto border-primary/30 hover:bg-primary/5">
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto border-primary/30 hover:bg-primary/5 hover:border-primary/50 transition-all">
               <Link to="/orcamentos">Solicitar Orçamento</Link>
             </Button>
           </div>
