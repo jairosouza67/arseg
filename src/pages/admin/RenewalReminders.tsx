@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -10,14 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Trash2, Send, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Trash2, Send, CheckCircle, XCircle, Clock } from "lucide-react";
 import { getAllReminders, updateReminderStatus, deleteReminder, sendPendingReminders } from "@/lib/renewalReminders";
 import type { RenewalReminder } from "@/lib/renewalReminders";
 import { formatDate } from "@/lib/dateUtils";
 import { getReminderStatusBadge } from "@/lib/statusUtils";
 
 const RenewalReminders = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [reminders, setReminders] = useState<RenewalReminder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,7 +149,7 @@ const RenewalReminders = () => {
 
   const handleSendPendingReminders = async () => {
     const pendingCount = reminders.filter(r => r.status === 'pending').length;
-    
+
     if (pendingCount === 0) {
       toast({
         title: "Aviso",
@@ -200,181 +196,201 @@ const RenewalReminders = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate("/admin")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-4xl font-bold">Lembretes de Renovação</h1>
-            <p className="text-muted-foreground">Gerencie lembretes automáticos de renovação de extintores</p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Lembretes de Renovação</h1>
+        <p className="text-muted-foreground mt-1">
+          Gerencie lembretes automáticos de renovação de extintores
+        </p>
+      </div>
+
+      {/* Filters and Actions */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 flex-1">
           <div className="flex items-center gap-2">
-            <Input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} placeholder="Início" />
-            <Input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} placeholder="Fim" />
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="sent">Enviado</SelectItem>
-                <SelectItem value="completed">Concluído</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sellerId} onValueChange={(v) => setSellerId(v === 'all' ? '' : v)}>
-              <SelectTrigger className="w-56">
-                <SelectValue placeholder="Vendedor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {sellers.filter(s => s.user_id).map((s) => (
-                  <SelectItem key={s.user_id} value={s.user_id}>{s.user_id}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Período:</span>
+            <Input
+              type="date"
+              value={dateStart}
+              onChange={(e) => setDateStart(e.target.value)}
+              className="w-40"
+            />
+            <span className="text-muted-foreground">até</span>
+            <Input
+              type="date"
+              value={dateEnd}
+              onChange={(e) => setDateEnd(e.target.value)}
+              className="w-40"
+            />
           </div>
-          <Button onClick={handleSendPendingReminders} disabled={loading}>
-            <Send className="mr-2 h-4 w-4" />
-            Enviar Lembretes Pendentes
-          </Button>
+
+          <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Status</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="sent">Enviado</SelectItem>
+              <SelectItem value="completed">Concluído</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sellerId || 'all'} onValueChange={(v) => setSellerId(v === 'all' ? '' : v)}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Vendedor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Vendedores</SelectItem>
+              {sellers.filter(s => s.user_id).map((s) => (
+                <SelectItem key={s.user_id} value={s.user_id}>{s.user_id}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
+        {/* Action Button */}
+        <Button
+          onClick={handleSendPendingReminders}
+          disabled={loading}
+          className="whitespace-nowrap"
+        >
+          <Send className="mr-2 h-4 w-4" />
+          Enviar Pendentes ({reminders.filter(r => r.status === 'pending').length})
+        </Button>
+      </div>
+
+      {/* Table Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Lista de Lembretes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">
+              <p>Carregando lembretes...</p>
+            </div>
+          ) : reminders.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Nenhum lembrete encontrado</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Data do Lembrete</TableHead>
+                  <TableHead>Data da Renovação</TableHead>
+                  <TableHead>Dias p/ Lembrete</TableHead>
+                  <TableHead>Dias p/ Renovação</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reminders.map((reminder) => {
+                  const daysToReminder = getDaysUntilReminder(reminder.reminder_date);
+                  const daysToRenewal = getDaysUntilRenewal(reminder.renewal_date);
+
+                  return (
+                    <TableRow key={reminder.id}>
+                      <TableCell className="font-medium">{reminder.customer_name}</TableCell>
+                      <TableCell>{reminder.customer_phone}</TableCell>
+                      <TableCell>{formatDate(reminder.reminder_date)}</TableCell>
+                      <TableCell>{formatDate(reminder.renewal_date)}</TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${daysToReminder <= 0 ? 'text-red-600' : daysToReminder <= 7 ? 'text-orange-600' : 'text-green-600'}`}>
+                          {daysToReminder <= 0 ? 'Vencido' : `${daysToReminder} dias`}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${daysToRenewal <= 0 ? 'text-red-600' : daysToRenewal <= 30 ? 'text-orange-600' : 'text-green-600'}`}>
+                          {daysToRenewal <= 0 ? 'Vencido' : `${daysToRenewal} dias`}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <select
+                          value={reminder.status}
+                          onChange={(e) => handleStatusChange(reminder.id, e.target.value as 'pending' | 'sent' | 'completed' | 'cancelled')}
+                          className="border rounded px-2 py-1 text-sm"
+                        >
+                          <option value="pending">Pendente</option>
+                          <option value="sent">Enviado</option>
+                          <option value="completed">Concluído</option>
+                          <option value="cancelled">Cancelado</option>
+                        </select>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(reminder.id)}
+                          title="Excluir lembrete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Lembretes de Renovação</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Lembretes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="text-center py-8">
-                <p>Carregando lembretes...</p>
-              </div>
-            ) : reminders.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Nenhum lembrete encontrado</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Data do Lembrete</TableHead>
-                    <TableHead>Data da Renovação</TableHead>
-                    <TableHead>Dias p/ Lembrete</TableHead>
-                    <TableHead>Dias p/ Renovação</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reminders.map((reminder) => {
-                    const daysToReminder = getDaysUntilReminder(reminder.reminder_date);
-                    const daysToRenewal = getDaysUntilRenewal(reminder.renewal_date);
-
-                    return (
-                      <TableRow key={reminder.id}>
-                        <TableCell className="font-medium">{reminder.customer_name}</TableCell>
-                        <TableCell>{reminder.customer_phone}</TableCell>
-                        <TableCell>{formatDate(reminder.reminder_date)}</TableCell>
-                        <TableCell>{formatDate(reminder.renewal_date)}</TableCell>
-                        <TableCell>
-                          <span className={`font-medium ${daysToReminder <= 0 ? 'text-red-600' : daysToReminder <= 7 ? 'text-orange-600' : 'text-green-600'}`}>
-                            {daysToReminder <= 0 ? 'Vencido' : `${daysToReminder} dias`}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`font-medium ${daysToRenewal <= 0 ? 'text-red-600' : daysToRenewal <= 30 ? 'text-orange-600' : 'text-green-600'}`}>
-                            {daysToRenewal <= 0 ? 'Vencido' : `${daysToRenewal} dias`}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <select
-                            value={reminder.status}
-                            onChange={(e) => handleStatusChange(reminder.id, e.target.value as 'pending' | 'sent' | 'completed' | 'cancelled')}
-                            className="border rounded px-2 py-1 text-sm"
-                          >
-                            <option value="pending">Pendente</option>
-                            <option value="sent">Enviado</option>
-                            <option value="completed">Concluído</option>
-                            <option value="cancelled">Cancelado</option>
-                          </select>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(reminder.id)}
-                            title="Excluir lembrete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+            <div className="text-2xl font-bold">{reminders.length}</div>
           </CardContent>
         </Card>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Lembretes</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{reminders.length}</div>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {reminders.filter(r => r.status === 'pending').length}
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {reminders.filter(r => r.status === 'pending').length}
-              </div>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Enviados</CardTitle>
+            <Send className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {reminders.filter(r => r.status === 'sent').length}
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enviados</CardTitle>
-              <Send className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {reminders.filter(r => r.status === 'sent').length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {reminders.filter(r => r.status === 'completed').length}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-      <Footer />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {reminders.filter(r => r.status === 'completed').length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

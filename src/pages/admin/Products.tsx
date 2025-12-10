@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -205,30 +203,28 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate("/admin")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
+    <>
+      <div className="mb-6 flex items-center gap-4">
+        <Button variant="outline" onClick={() => navigate("/admin")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold">Produtos</h1>
+          <p className="text-muted-foreground">Gerencie o catálogo de produtos</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={bulkImportFireExtinguishers}>
+            <Download className="mr-2 h-4 w-4" />
+            Importar Extintores
           </Button>
-          <div className="flex-1">
-            <h1 className="text-4xl font-bold">Produtos</h1>
-            <p className="text-muted-foreground">Gerencie o catálogo de produtos</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={bulkImportFireExtinguishers}>
-              <Download className="mr-2 h-4 w-4" />
-              Importar Extintores
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => openDialog()}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Novo Produto
-                </Button>
-              </DialogTrigger>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => openDialog()}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Produto
+              </Button>
+            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
@@ -293,71 +289,69 @@ const Products = () => {
               </form>
             </DialogContent>
           </Dialog>
-          </div>
         </div>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Produtos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Preço</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Produtos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Preço</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.type}</TableCell>
+                  <TableCell>Preço a combinar</TableCell>
+                  <TableCell>
+                    {product.in_stock ? (
+                      <span className="text-green-600">Em estoque</span>
+                    ) : (
+                      <span className="text-red-600">Indisponível</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openDialog(product)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.type}</TableCell>
-                    <TableCell>Preço a combinar</TableCell>
-                    <TableCell>
-                      {product.in_stock ? (
-                        <span className="text-green-600">Em estoque</span>
-                      ) : (
-                        <span className="text-red-600">Indisponível</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openDialog(product)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(product.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {products.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Nenhum produto cadastrado
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </main>
-      <Footer />
-    </div>
+              ))}
+              {products.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    Nenhum produto cadastrado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

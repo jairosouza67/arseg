@@ -21,6 +21,7 @@ import { SidebarProvider } from "@/components/ui/sidebar.tsx";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { SellerSidebar } from "@/components/SellerSidebar";
 import { Toaster } from "@/components/ui/sonner.tsx";
+import { Header } from "@/components/Header";
 
 const AppRouter = () => {
   return (
@@ -38,7 +39,7 @@ const AppRouter = () => {
         <Route path="/orcamentos" element={<Orcamentos />} />
         <Route path="/contato" element={<Contato />} />
 
-                <Route
+        <Route
           path="/vendedor"
           element={
             <SellerDashboardRoute>
@@ -64,11 +65,14 @@ const AppRouter = () => {
           element={
             <AdminRoute>
               <SidebarProvider>
-                <div className="flex min-h-screen">
+                <div className="flex min-h-screen w-full">
                   <AdminSidebar />
-                  <main className="flex-1 p-6">
-                    <Outlet />
-                  </main>
+                  <div className="flex-1 flex flex-col">
+                    <Header />
+                    <main className="flex-1 p-6">
+                      <Outlet />
+                    </main>
+                  </div>
                 </div>
               </SidebarProvider>
             </AdminRoute>
