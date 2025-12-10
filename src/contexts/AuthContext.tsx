@@ -29,69 +29,85 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const lastSessionId = useRef<string | null>(null);
 
   // Função centralizada para carregar role do usuário
+  // Usando fetch nativo com AbortController para diagnóstico e timeout confiável
   const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
     const MAX_RETRIES = 2;
-    const TIMEOUT_MS = 10000; // 10 seconds timeout
+    const TIMEOUT_MS = 8000; // 8 seconds timeout
+
+    // Obter URL e chave do Supabase para fetch nativo
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.log("[TEMP DEBUG] ⏰ Aborting request due to timeout");
+        controller.abort();
+      }, TIMEOUT_MS);
+
       try {
         if (attempt > 0) {
           console.log(`[TEMP DEBUG] 🔄 Retry attempt ${attempt}/${MAX_RETRIES}`);
-          // Exponential backoff: wait before retry
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
 
         console.log("[TEMP DEBUG] 📊 Loading role for user:", userId);
         console.log("[TEMP DEBUG] ⏱️ Query start time:", new Date().toISOString());
+        console.log("[TEMP DEBUG] 🌐 Network status:", navigator.onLine ? "ONLINE" : "OFFLINE");
 
         const startTime = performance.now();
 
-        // Criar timeout
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error(`Query timeout after ${TIMEOUT_MS / 1000}s`));
-          }, TIMEOUT_MS);
+        // Usar fetch nativo para ter controle total do AbortController
+        const url = `${supabaseUrl}/rest/v1/user_roles?select=role&user_id=eq.${userId}`;
+        console.log("[TEMP DEBUG] 🔗 Fetching URL:", url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          signal: controller.signal
         });
 
-        // Query com timeout
-        const queryPromise = supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        const result = await Promise.race([queryPromise, timeoutPromise]);
-        const { data, error } = result as any;
+        clearTimeout(timeoutId);
 
         const endTime = performance.now();
-        console.log("[TEMP DEBUG] ⏱️ Query completed in:", (endTime - startTime).toFixed(2), "ms");
-        console.log("[TEMP DEBUG] Query result:", { data, error });
+        console.log("[TEMP DEBUG] ⏱️ Fetch completed in:", (endTime - startTime).toFixed(2), "ms");
+        console.log("[TEMP DEBUG] 📡 Response status:", response.status, response.statusText);
 
-        // Check for network/offline errors (503 from SW or fetch errors)
-        if (error?.message?.includes('offline') || error?.message?.includes('Network')) {
-          console.warn("[TEMP DEBUG] ⚠️ Network error detected, will retry");
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("[TEMP DEBUG] ❌ HTTP Error:", response.status, errorText);
           if (attempt < MAX_RETRIES) continue;
           return null;
         }
 
-        if (error) {
-          console.error("[TEMP DEBUG] ❌ Error fetching user role:", error);
-          if (attempt < MAX_RETRIES) continue;
-          return null;
-        }
+        const data = await response.json();
+        console.log("[TEMP DEBUG] 📦 Response data:", data);
 
-        if (data?.role) {
-          console.log("[TEMP DEBUG] ✅ Role found:", data.role);
-          return data.role as AppRole;
+        // API retorna array, pegar primeiro item
+        if (Array.isArray(data) && data.length > 0 && data[0]?.role) {
+          console.log("[TEMP DEBUG] ✅ Role found:", data[0].role);
+          return data[0].role as AppRole;
         }
 
         console.log("[TEMP DEBUG] ⚠️ No role found in database");
         return null;
       } catch (err: any) {
-        console.error(`[TEMP DEBUG] ❌ Exception loading user role (attempt ${attempt + 1}):`, err);
+        clearTimeout(timeoutId);
 
-        // If timeout or network error, retry
-        if (err.message?.includes('timeout') || err.message?.includes('Network')) {
+        const isAbortError = err.name === 'AbortError';
+        console.error(`[TEMP DEBUG] ❌ Exception (attempt ${attempt + 1}):`, {
+          name: err.name,
+          message: err.message,
+          isAbortError
+        });
+
+        if (isAbortError || err.message?.includes('Network') || err.message?.includes('Failed to fetch')) {
           if (attempt < MAX_RETRIES) {
             console.log("[TEMP DEBUG] 🔄 Will retry after error");
             continue;
@@ -103,6 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     return null;
   }, []);
+
 
   // Função para processar mudanças de sessão
   const handleSessionChange = useCallback(async (session: Session | null, event: string) => {

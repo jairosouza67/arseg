@@ -4,7 +4,7 @@
  */
 import { debugLog } from "@/lib/debugUtils";
 
-const CURRENT_VERSION = '2025-11-15-002';
+const CURRENT_VERSION = '2025-12-10-001';
 const VERSION_KEY = 'arseg-app-version';
 
 // Verificar se é a primeira vez que carrega esta versão
@@ -25,18 +25,22 @@ if (storedVersion !== CURRENT_VERSION) {
     });
   }
 
-  // Desregistrar service workers antigos
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => {
-        debugLog('🗑️ Desregistrando service worker antigo');
-        registration.unregister();
-      });
-    });
-  }
-
   // Salvar nova versão
   localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
-  
+
   debugLog('✅ Limpeza concluída! Versão:', CURRENT_VERSION);
 }
+
+// SEMPRE desregistrar service workers (não apenas na mudança de versão)
+// Isso garante que SWs problemáticos não persistam
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    if (registrations.length > 0) {
+      registrations.forEach((registration) => {
+        debugLog('🗑️ Desregistrando service worker');
+        registration.unregister();
+      });
+    }
+  });
+}
+
