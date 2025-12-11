@@ -157,21 +157,22 @@ const Suppliers = () => {
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-4">
-        <Button variant="outline" onClick={() => navigate("/admin")}>
+      {/* Header responsivo */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate("/admin")} className="w-fit">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <div className="flex-1">
-          <h1 className="text-4xl font-bold">Fornecedores</h1>
-          <p className="text-muted-foreground">Gerencie seus fornecedores</p>
+          <h1 className="text-2xl sm:text-4xl font-bold">Fornecedores</h1>
+          <p className="text-sm text-muted-foreground">Gerencie seus fornecedores</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button size="sm" className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Novo Fornecedor
             </Button>
@@ -269,59 +270,102 @@ const Suppliers = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Fornecedores</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Lista de Fornecedores</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Cidade/Estado</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {suppliers.map((supplier) => (
-                <TableRow key={supplier.id}>
-                  <TableCell className="font-medium">{supplier.name}</TableCell>
-                  <TableCell>{supplier.cnpj || "-"}</TableCell>
-                  <TableCell>{supplier.email || "-"}</TableCell>
-                  <TableCell>{supplier.phone || "-"}</TableCell>
-                  <TableCell>
-                    {supplier.city && supplier.state
-                      ? `${supplier.city}/${supplier.state}`
-                      : supplier.city || supplier.state || "-"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(supplier)}
-                    >
+          {/* Versão Mobile - Cards */}
+          <div className="block md:hidden space-y-4">
+            {suppliers.map((supplier) => (
+              <div key={supplier.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">{supplier.name}</p>
+                    <p className="text-sm text-muted-foreground">{supplier.cnpj || "-"}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(supplier)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(supplier.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(supplier.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {suppliers.length === 0 && (
+                  </div>
+                </div>
+                {supplier.phone && (
+                  <p className="text-sm text-muted-foreground">{supplier.phone}</p>
+                )}
+                {supplier.email && (
+                  <p className="text-sm text-muted-foreground text-xs">{supplier.email}</p>
+                )}
+                {(supplier.city || supplier.state) && (
+                  <p className="text-sm text-muted-foreground">
+                    {supplier.city && supplier.state
+                      ? `${supplier.city}/${supplier.state}`
+                      : supplier.city || supplier.state}
+                  </p>
+                )}
+              </div>
+            ))}
+            {suppliers.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum fornecedor cadastrado
+              </p>
+            )}
+          </div>
+
+          {/* Versão Desktop - Tabela */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Nenhum fornecedor cadastrado
-                  </TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>CNPJ</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Cidade/Estado</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {suppliers.map((supplier) => (
+                  <TableRow key={supplier.id}>
+                    <TableCell className="font-medium">{supplier.name}</TableCell>
+                    <TableCell>{supplier.cnpj || "-"}</TableCell>
+                    <TableCell>{supplier.email || "-"}</TableCell>
+                    <TableCell>{supplier.phone || "-"}</TableCell>
+                    <TableCell>
+                      {supplier.city && supplier.state
+                        ? `${supplier.city}/${supplier.state}`
+                        : supplier.city || supplier.state || "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(supplier)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(supplier.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {suppliers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      Nenhum fornecedor cadastrado
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>

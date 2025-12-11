@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Download, Package } from "lucide-react";
 
 interface Product {
   id: string;
@@ -204,23 +204,25 @@ const Products = () => {
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-4">
-        <Button variant="outline" onClick={() => navigate("/admin")}>
+      {/* Header responsivo */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate("/admin")} className="w-fit">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <div className="flex-1">
-          <h1 className="text-4xl font-bold">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo de produtos</p>
+          <h1 className="text-2xl sm:text-4xl font-bold">Produtos</h1>
+          <p className="text-sm text-muted-foreground">Gerencie o catálogo de produtos</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={bulkImportFireExtinguishers}>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" size="sm" onClick={bulkImportFireExtinguishers} className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
-            Importar Extintores
+            <span className="hidden sm:inline">Importar Extintores</span>
+            <span className="sm:hidden">Importar</span>
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => openDialog()}>
+              <Button size="sm" onClick={() => openDialog()} className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Produto
               </Button>
@@ -294,61 +296,100 @@ const Products = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Produtos</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Lista de Produtos</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.type}</TableCell>
-                  <TableCell>Preço a combinar</TableCell>
-                  <TableCell>
-                    {product.in_stock ? (
-                      <span className="text-green-600">Em estoque</span>
-                    ) : (
-                      <span className="text-red-600">Indisponível</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openDialog(product)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {products.length === 0 && (
+          {/* Versão Mobile - Cards */}
+          <div className="block md:hidden space-y-4">
+            {products.map((product) => (
+              <div key={product.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-semibold">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">{product.type}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => openDialog(product)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Preço a combinar</span>
+                  {product.in_stock ? (
+                    <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Em estoque</span>
+                  ) : (
+                    <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">Indisponível</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {products.length === 0 && (
+              <div className="text-center py-8">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">Nenhum produto cadastrado</p>
+              </div>
+            )}
+          </div>
+
+          {/* Versão Desktop - Tabela */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Nenhum produto cadastrado
-                  </TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>{product.type}</TableCell>
+                    <TableCell>Preço a combinar</TableCell>
+                    <TableCell>
+                      {product.in_stock ? (
+                        <span className="text-green-600">Em estoque</span>
+                      ) : (
+                        <span className="text-red-600">Indisponível</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openDialog(product)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {products.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      Nenhum produto cadastrado
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>

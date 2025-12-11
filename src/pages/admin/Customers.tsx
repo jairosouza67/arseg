@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowLeft, Phone } from "lucide-react";
 
 interface Customer {
   id: string;
@@ -157,26 +157,27 @@ const Customers = () => {
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-4">
-        <Button variant="outline" onClick={() => navigate("/admin")}>
+      {/* Header responsivo */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate("/admin")} className="w-fit">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
         <div className="flex-1">
-          <h1 className="text-4xl font-bold">Clientes</h1>
-          <p className="text-muted-foreground">Gerencie seus clientes</p>
+          <h1 className="text-2xl sm:text-4xl font-bold">Clientes</h1>
+          <p className="text-sm text-muted-foreground">Gerencie seus clientes</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button size="sm" className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Novo Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
             <DialogHeader>
               <DialogTitle>{editingCustomer ? "Editar Cliente" : "Novo Cliente"}</DialogTitle>
               <DialogDescription>
@@ -184,7 +185,7 @@ const Customers = () => {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome *</Label>
                   <Input
@@ -203,7 +204,7 @@ const Customers = () => {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -231,7 +232,7 @@ const Customers = () => {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">Cidade</Label>
                   <Input
@@ -257,7 +258,7 @@ const Customers = () => {
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
@@ -268,61 +269,106 @@ const Customers = () => {
         </Dialog>
       </div>
 
+      {/* Lista de Clientes - Cards no mobile, Tabela no desktop */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Clientes</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Lista de Clientes</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>CPF/CNPJ</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Cidade/Estado</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {customers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>{customer.cpf_cnpj || "-"}</TableCell>
-                  <TableCell>{customer.email || "-"}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>
-                    {customer.city && customer.state
-                      ? `${customer.city}/${customer.state}`
-                      : customer.city || customer.state || "-"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(customer)}
-                    >
+          {/* Versão Mobile - Cards */}
+          <div className="block md:hidden space-y-4">
+            {customers.map((customer) => (
+              <div key={customer.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">{customer.name}</p>
+                    <p className="text-sm text-muted-foreground">{customer.cpf_cnpj || "-"}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(customer)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(customer.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(customer.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {customers.length === 0 && (
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-3 w-3" />
+                  <span>{customer.phone}</span>
+                </div>
+                {customer.email && (
+                  <p className="text-sm text-muted-foreground">{customer.email}</p>
+                )}
+                {(customer.city || customer.state) && (
+                  <p className="text-sm text-muted-foreground">
+                    {customer.city && customer.state
+                      ? `${customer.city}/${customer.state}`
+                      : customer.city || customer.state}
+                  </p>
+                )}
+              </div>
+            ))}
+            {customers.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum cliente cadastrado
+              </p>
+            )}
+          </div>
+
+          {/* Versão Desktop - Tabela */}
+          <div className="hidden md:block overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Nenhum cliente cadastrado
-                  </TableCell>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Cidade/Estado</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {customers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className="font-medium">{customer.name}</TableCell>
+                    <TableCell>{customer.cpf_cnpj || "-"}</TableCell>
+                    <TableCell>{customer.email || "-"}</TableCell>
+                    <TableCell>{customer.phone}</TableCell>
+                    <TableCell>
+                      {customer.city && customer.state
+                        ? `${customer.city}/${customer.state}`
+                        : customer.city || customer.state || "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(customer)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(customer.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {customers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                      Nenhum cliente cadastrado
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>
@@ -330,3 +376,4 @@ const Customers = () => {
 };
 
 export default Customers;
+
