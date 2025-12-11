@@ -22,6 +22,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { SellerSidebar } from "@/components/SellerSidebar";
 import { Toaster } from "@/components/ui/sonner.tsx";
 import { Header } from "@/components/Header";
+import { MobileNav } from "@/components/MobileNav";
 
 import { ScrollToTop } from "@/components/ScrollToTop";
 
@@ -49,10 +50,11 @@ const AppRouter = () => {
               <SidebarProvider>
                 <div className="flex min-h-screen">
                   <SellerSidebar />
-                  <main className="flex-1 p-6">
+                  <main className="flex-1 p-6 pb-20 md:pb-6">
                     <Outlet />
                   </main>
                 </div>
+                <MobileNav />
               </SidebarProvider>
             </SellerDashboardRoute>
           }
@@ -72,11 +74,12 @@ const AppRouter = () => {
                   <AdminSidebar />
                   <div className="flex-1 flex flex-col">
                     <Header />
-                    <main className="flex-1 p-6">
+                    <main className="flex-1 p-6 pb-20 md:pb-6">
                       <Outlet />
                     </main>
                   </div>
                 </div>
+                <MobileNav />
               </SidebarProvider>
             </AdminRoute>
           }
