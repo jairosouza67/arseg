@@ -116,41 +116,59 @@ const SellerQuotes = () => {
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Meus Orçamentos</h1>
-          <p className="text-muted-foreground">Lista de orçamentos criados por você.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Meus Orçamentos</h1>
+          <p className="text-sm text-muted-foreground mt-1">Lista de orçamentos criados por você.</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Orçamentos</CardTitle>
+            <CardTitle className="text-lg">Orçamentos</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]" />
-                  <TableHead>Data</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Qtd Itens</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[140px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {quotes.map((quote) => (
-                  <React.Fragment key={quote.id}>
-                    <TableRow className="hover:bg-muted/40" onClick={() => toggleRow(quote.id)}>
-                      <TableCell className="align-top">
-                        {expandedRows.has(quote.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </TableCell>
-                      <TableCell className="align-top">{formatDate(quote.created_at)}</TableCell>
-                      <TableCell className="align-top font-medium">{quote.customer_name}</TableCell>
-                      <TableCell className="align-top">{quote.customer_email || "-"}</TableCell>
-                      <TableCell className="align-top">{quote.customer_phone}</TableCell>
-                      <TableCell className="align-top">{Array.isArray(quote.items) ? quote.items.length : 0}</TableCell>
-                      <TableCell className="align-top">
+            {quotes.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Nenhum orçamento encontrado.</p>
+            ) : (
+              <>
+                {/* Versão Mobile - Cards */}
+                <div className="block md:hidden space-y-4">
+                  {quotes.map((quote) => (
+                    <div key={quote.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">{quote.customer_name}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(quote.created_at)}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            className="p-2"
+                            onClick={() => generateQuotePDF(quote as any)}
+                            title="Baixar PDF"
+                          >
+                            <FileDown className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="p-2"
+                            onClick={() => handleDelete(quote.id)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground text-xs">Telefone</p>
+                          <p>{quote.customer_phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Itens</p>
+                          <p>{Array.isArray(quote.items) ? quote.items.length : 0}</p>
+                        </div>
+                      </div>
+                      {quote.customer_email && (
+                        <p className="text-sm text-muted-foreground">{quote.customer_email}</p>
+                      )}
+                      <div className="flex items-center justify-between">
                         <Select value={quote.status} onValueChange={(value) => handleStatusChange(quote.id, value)}>
                           <SelectTrigger className="w-28">
                             <SelectValue>{getQuoteStatusBadge(quote.status)}</SelectValue>
@@ -160,78 +178,161 @@ const SellerQuotes = () => {
                             <SelectItem value="rejected">Rejeitado</SelectItem>
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                      <TableCell className="align-top">
-                        <div className="flex gap-1">
-                          <button
-                            className="p-2"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              await generateQuotePDF(quote as any);
-                            }}
-                            title="Baixar PDF"
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </button>
-                          <button
-                            className="p-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(quote.id);
-                            }}
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-
-                    {expandedRows.has(quote.id) && (
-                      <TableRow>
-                        <TableCell colSpan={8} className="bg-muted/40">
-                          <div className="p-4 space-y-4">
-                            <div>
-                              <h4 className="font-semibold mb-2">Produtos solicitados</h4>
-                              {Array.isArray(quote.items) && quote.items.length > 0 ? (
-                                <div className="space-y-2">
-                                  {quote.items.map((item: any, idx: number) => (
-                                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
-                                      <div>
-                                        <p className="font-medium">{item.product_name}</p>
-                                        <p className="text-xs text-muted-foreground">{item.product_type}</p>
-                                      </div>
-                                      <div className="text-right text-xs">
-                                        <p>Quantidade: {item.quantity}</p>
-                                        <p>Preço: a combinar</p>
-                                      </div>
+                        <button
+                          className="flex items-center gap-1 text-sm text-muted-foreground"
+                          onClick={() => toggleRow(quote.id)}
+                        >
+                          {expandedRows.has(quote.id) ? (
+                            <>
+                              <ChevronUp className="h-4 w-4" /> Ocultar
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4" /> Ver detalhes
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      {expandedRows.has(quote.id) && (
+                        <div className="pt-3 border-t space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-sm mb-2">Produtos solicitados</h4>
+                            {Array.isArray(quote.items) && quote.items.length > 0 ? (
+                              <div className="space-y-2">
+                                {quote.items.map((item: any, idx: number) => (
+                                  <div key={idx} className="flex justify-between items-center p-2 bg-muted/40 rounded text-sm">
+                                    <div>
+                                      <p className="font-medium">{item.product_name}</p>
+                                      <p className="text-xs text-muted-foreground">{item.product_type}</p>
                                     </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum item registrado.</p>
-                              )}
-                            </div>
-                            {quote.notes && (
-                              <div>
-                                <h4 className="font-semibold mb-2">Observações do cliente</h4>
-                                <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
+                                    <div className="text-right text-xs">
+                                      <p>Qtd: {item.quantity}</p>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">Nenhum item registrado.</p>
                             )}
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                ))}
+                          {quote.notes && (
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Observações</h4>
+                              <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-                {quotes.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum orçamento encontrado.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                {/* Versão Desktop - Tabela */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[40px]" />
+                        <TableHead>Data</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Telefone</TableHead>
+                        <TableHead>Qtd Itens</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[140px]">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {quotes.map((quote) => (
+                        <React.Fragment key={quote.id}>
+                          <TableRow className="hover:bg-muted/40" onClick={() => toggleRow(quote.id)}>
+                            <TableCell className="align-top">
+                              {expandedRows.has(quote.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </TableCell>
+                            <TableCell className="align-top">{formatDate(quote.created_at)}</TableCell>
+                            <TableCell className="align-top font-medium">{quote.customer_name}</TableCell>
+                            <TableCell className="align-top">{quote.customer_email || "-"}</TableCell>
+                            <TableCell className="align-top">{quote.customer_phone}</TableCell>
+                            <TableCell className="align-top">{Array.isArray(quote.items) ? quote.items.length : 0}</TableCell>
+                            <TableCell className="align-top">
+                              <Select value={quote.status} onValueChange={(value) => handleStatusChange(quote.id, value)}>
+                                <SelectTrigger className="w-28">
+                                  <SelectValue>{getQuoteStatusBadge(quote.status)}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pendente</SelectItem>
+                                  <SelectItem value="rejected">Rejeitado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="align-top">
+                              <div className="flex gap-1">
+                                <button
+                                  className="p-2"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    await generateQuotePDF(quote as any);
+                                  }}
+                                  title="Baixar PDF"
+                                >
+                                  <FileDown className="h-4 w-4" />
+                                </button>
+                                <button
+                                  className="p-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(quote.id);
+                                  }}
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+
+                          {expandedRows.has(quote.id) && (
+                            <TableRow>
+                              <TableCell colSpan={8} className="bg-muted/40">
+                                <div className="p-4 space-y-4">
+                                  <div>
+                                    <h4 className="font-semibold mb-2">Produtos solicitados</h4>
+                                    {Array.isArray(quote.items) && quote.items.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {quote.items.map((item: any, idx: number) => (
+                                          <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
+                                            <div>
+                                              <p className="font-medium">{item.product_name}</p>
+                                              <p className="text-xs text-muted-foreground">{item.product_type}</p>
+                                            </div>
+                                            <div className="text-right text-xs">
+                                              <p>Quantidade: {item.quantity}</p>
+                                              <p>Preço: a combinar</p>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-muted-foreground">Nenhum item registrado.</p>
+                                    )}
+                                  </div>
+                                  {quote.notes && (
+                                    <div>
+                                      <h4 className="font-semibold mb-2">Observações do cliente</h4>
+                                      <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </main>

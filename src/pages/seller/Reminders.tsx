@@ -80,40 +80,66 @@ const SellerReminders = () => {
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Meus Lembretes</h1>
-          <p className="text-muted-foreground">Lembretes relacionados aos orçamentos que você criou.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Meus Lembretes</h1>
+          <p className="text-sm text-muted-foreground mt-1">Lembretes relacionados aos orçamentos que você criou.</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Lembretes</CardTitle>
+            <CardTitle className="text-lg">Lembretes</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data do Lembrete</TableHead>
-                  <TableHead>Data de Renovação</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reminders.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.reminder_date}</TableCell>
-                    <TableCell>{r.renewal_date}</TableCell>
-                    <TableCell className="font-medium">{r.customer_name}</TableCell>
-                    <TableCell>{r.status}</TableCell>
-                  </TableRow>
-                ))}
-                {reminders.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">Nenhum lembrete encontrado.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            {reminders.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Nenhum lembrete encontrado.</p>
+            ) : (
+              <>
+                {/* Versão Mobile - Cards */}
+                <div className="block md:hidden space-y-4">
+                  {reminders.map((r) => (
+                    <div key={r.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <p className="font-semibold">{r.customer_name}</p>
+                        <span className="text-xs px-2 py-1 rounded bg-muted">{r.status}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground text-xs">Lembrete</p>
+                          <p>{r.reminder_date}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">Renovação</p>
+                          <p>{r.renewal_date}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Versão Desktop - Tabela */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data do Lembrete</TableHead>
+                        <TableHead>Data de Renovação</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reminders.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell>{r.reminder_date}</TableCell>
+                          <TableCell>{r.renewal_date}</TableCell>
+                          <TableCell className="font-medium">{r.customer_name}</TableCell>
+                          <TableCell>{r.status}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </main>
