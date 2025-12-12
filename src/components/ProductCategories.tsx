@@ -34,7 +34,7 @@ export const ProductCategories = () => {
       <div className="container">
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold">
-            Nossos Tipos de{" "}
+            
             Nossos Tipos de{" "}
             <span className="text-primary">
               Extintores
