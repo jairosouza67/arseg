@@ -152,37 +152,37 @@ const Products = () => {
 
     const fireExtinguishers = [
       // Extintores Veiculares Pó ABC
-      { name: 'Extintor Veicular Pó ABC 1kg', type: 'Pó ABC', description: 'Extintor veicular portátil de pó químico ABC 1kg', in_stock: true, price: 0 },
-      { name: 'Extintor Veicular Pó ABC 2kg', type: 'Pó ABC', description: 'Extintor veicular portátil de pó químico ABC 2kg', in_stock: true, price: 0 },
+      { name: 'Extintor Veicular Pó ABC 1kg', type: 'Pó ABC', description: 'Extintor veicular portátil de pó químico ABC 1kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor Veicular Pó ABC 2kg', type: 'Pó ABC', description: 'Extintor veicular portátil de pó químico ABC 2kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
       // Extintores de Pó BC
-      { name: 'Extintor de Pó BC 4kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 4kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó BC 6kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 6kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó BC 8kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 8kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó BC 10kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 10kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó BC 12kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 12kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC 4kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 4kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
+      { name: 'Extintor de Pó BC 6kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 6kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
+      { name: 'Extintor de Pó BC 8kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 8kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
+      { name: 'Extintor de Pó BC 10kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 10kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
+      { name: 'Extintor de Pó BC 12kg', type: 'Pó BC', description: 'Extintor portátil de pó químico BC 12kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
       // Extintores de Pó BC Carreta
-      { name: 'Extintor de Pó BC Carreta 20kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 20kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó BC Carreta 30kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 30kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó BC Carreta 50kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 50kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó BC Carreta 20kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 20kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
+      { name: 'Extintor de Pó BC Carreta 30kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 30kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
+      { name: 'Extintor de Pó BC Carreta 50kg', type: 'Pó BC', description: 'Extintor sobre rodas de pó químico BC 50kg', in_stock: true, price: 0, image_url: '/products/extintor-bc.png' },
       // Extintores de Pó ABC
-      { name: 'Extintor de Pó ABC 4kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 4kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó ABC 6kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 6kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó ABC 8kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 8kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó ABC 10kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 10kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó ABC 12kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 12kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC 4kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 4kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor de Pó ABC 6kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 6kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor de Pó ABC 8kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 8kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor de Pó ABC 10kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 10kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor de Pó ABC 12kg', type: 'Pó ABC', description: 'Extintor portátil de pó químico ABC 12kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
       // Extintores de Pó ABC Carreta
-      { name: 'Extintor de Pó ABC Carreta 20kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 20kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó ABC Carreta 30kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 30kg', in_stock: true, price: 0 },
-      { name: 'Extintor de Pó ABC Carreta 50kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 50kg', in_stock: true, price: 0 },
+      { name: 'Extintor de Pó ABC Carreta 20kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 20kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor de Pó ABC Carreta 30kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 30kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
+      { name: 'Extintor de Pó ABC Carreta 50kg', type: 'Pó ABC', description: 'Extintor sobre rodas de pó químico ABC 50kg', in_stock: true, price: 0, image_url: '/products/extintor-abc.png' },
       // Extintores CO2
-      { name: 'Extintor CO2 4kg', type: 'CO₂', description: 'Extintor portátil de dióxido de carbono 4kg', in_stock: true, price: 0 },
-      { name: 'Extintor CO2 6kg', type: 'CO₂', description: 'Extintor portátil de dióxido de carbono 6kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 4kg', type: 'CO₂', description: 'Extintor portátil de dióxido de carbono 4kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
+      { name: 'Extintor CO2 6kg', type: 'CO₂', description: 'Extintor portátil de dióxido de carbono 6kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
       // Extintores CO2 Carreta
-      { name: 'Extintor CO2 Carreta 10kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 10kg', in_stock: true, price: 0 },
-      { name: 'Extintor CO2 Carreta 20kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 20kg', in_stock: true, price: 0 },
-      { name: 'Extintor CO2 Carreta 30kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 30kg', in_stock: true, price: 0 },
-      { name: 'Extintor CO2 Carreta 40kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 40kg', in_stock: true, price: 0 },
-      { name: 'Extintor CO2 Carreta 50kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 50kg', in_stock: true, price: 0 },
+      { name: 'Extintor CO2 Carreta 10kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 10kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
+      { name: 'Extintor CO2 Carreta 20kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 20kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
+      { name: 'Extintor CO2 Carreta 30kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 30kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
+      { name: 'Extintor CO2 Carreta 40kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 40kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
+      { name: 'Extintor CO2 Carreta 50kg', type: 'CO₂', description: 'Extintor sobre rodas de dióxido de carbono 50kg', in_stock: true, price: 0, image_url: '/products/extintor-co2.png' },
     ];
 
     const { error } = await supabase.from('products').insert(fireExtinguishers);

@@ -14,18 +14,17 @@ export const Hero = () => {
       <div className="absolute bottom-10 left-10 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
 
-      {/* Extinguisher Overlay */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
         <img
           src="/products/extintor-abc.png"
           alt=""
-          className="absolute -left-20 top-20 w-96 opacity-20 -rotate-12 blur-[1px] animate-float"
+          className="absolute -left-20 top-20 w-72 opacity-20 -rotate-12 blur-[1px] animate-float"
           style={{ animationDelay: "0s" }}
         />
         <img
           src="/products/extintor-co2.png"
           alt=""
-          className="absolute -right-20 bottom-0 w-96 opacity-20 rotate-12 blur-[1px] animate-float"
+          className="absolute -right-20 bottom-0 w-72 opacity-20 rotate-12 blur-[1px] animate-float"
           style={{ animationDelay: "1.5s" }}
         />
       </div>

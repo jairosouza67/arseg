@@ -3,6 +3,7 @@ import Index from "@/pages/Index.tsx";
 import Login from "@/pages/Login.tsx";
 import Produtos from "@/pages/Produtos.tsx";
 import Orcamentos from "@/pages/Orcamentos.tsx";
+import ProductDetail from "@/pages/ProductDetail.tsx";
 import Contato from "@/pages/Contato.tsx";
 import NotFound from "@/pages/NotFound.tsx";
 import { AdminRoute } from "@/components/AdminRoute.tsx";
@@ -40,6 +41,7 @@ const AppRouter = () => {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/produtos" element={<Produtos />} />
+        <Route path="/produtos/:id" element={<ProductDetail />} />
         <Route path="/orcamentos" element={<Orcamentos />} />
         <Route path="/contato" element={<Contato />} />
 

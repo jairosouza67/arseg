@@ -37,7 +37,7 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container relative flex h-16 items-center justify-between">
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <img src="/logo-arseg.jpg" alt="Arseg Extintores" className="w-24 h-24 object-contain" />
+          <img src="/logo-arseg.jpg" alt="Arseg Extintores" className="w-16 h-16 object-contain" />
         </Link>
 
         {/* Desktop Navigation */}

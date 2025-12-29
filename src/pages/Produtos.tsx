@@ -11,6 +11,14 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { MobileNav } from "@/components/MobileNav";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface Product {
   id: string;
   name: string;
@@ -20,7 +28,11 @@ interface Product {
   image_url: string | null;
 }
 
-const categories = ["Todos", "Pó ABC", "Pó BC", "CO₂", "Água Pressurizada"];
+const CATEGORY_GROUPS: Record<string, string[]> = {
+  "Equipamentos & Combate": ["Mangueira", "Combate a Incêndio"],
+  "Sinalização & Luz": ["Sinalização", "Iluminação"],
+  "Peças & Acessórios": ["Componentes", "Acessórios", "Sifão", "Suporte", "Fitas", "Agente Extintor"],
+};
 
 const Produtos = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,8 +65,33 @@ const Produtos = () => {
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "Todos" || product.type === selectedCategory;
-    return matchesSearch && matchesCategory;
+    if (!matchesSearch) return false;
+
+    if (selectedCategory === "Todos") return true;
+
+    // Lógica para Extintores e Sub-tipos
+    if (selectedCategory.startsWith("extintor-")) {
+      if (product.type !== "Extintor") return false;
+      if (selectedCategory === "extintor-all") return true;
+
+      const subtype = selectedCategory.replace("extintor-", "");
+      const n = product.name.toLowerCase();
+
+      if (subtype === "abc") return n.includes("abc");
+      if (subtype === "bc") return n.includes("bc") && !n.includes("abc");
+      if (subtype === "co2") return n.includes("co2") || n.includes("co²");
+      if (subtype === "agua") return n.includes("água") || n.includes("agua");
+      if (subtype === "espuma") return n.includes("espuma");
+      return true;
+    }
+
+    // Lógica para Grupos Genéricos
+    const groupTypes = CATEGORY_GROUPS[selectedCategory];
+    if (groupTypes) {
+      return groupTypes.includes(product.type);
+    }
+
+    return product.type === selectedCategory;
   });
 
   const getProductImage = (product: Product) => {
@@ -83,7 +120,7 @@ const Produtos = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 pb-20 md:pb-0">
         {/* Page Header */}
         <section className="bg-gradient-hero py-20">
@@ -116,16 +153,42 @@ const Produtos = () => {
 
               {/* Category Filters and Cart */}
               <div className="flex flex-wrap gap-2 items-center">
-                {categories.map((category) => (
+                <Button
+                  variant={selectedCategory === "Todos" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory("Todos")}
+                >
+                  Todos
+                </Button>
+
+                <Select
+                  onValueChange={setSelectedCategory}
+                  value={selectedCategory.startsWith("extintor-") ? selectedCategory : undefined}
+                >
+                  <SelectTrigger className={`h-9 w-[180px] ${selectedCategory.startsWith("extintor-") ? "bg-primary text-primary-foreground" : ""}`}>
+                    <SelectValue placeholder="Extintores" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="extintor-all">Todos os Extintores</SelectItem>
+                    <SelectItem value="extintor-abc">Pó ABC</SelectItem>
+                    <SelectItem value="extintor-bc">Pó BC</SelectItem>
+                    <SelectItem value="extintor-co2">CO₂ (Gás Carbônico)</SelectItem>
+                    <SelectItem value="extintor-agua">Água Pressurizada</SelectItem>
+                    <SelectItem value="extintor-espuma">Espuma Mecânica</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {Object.keys(CATEGORY_GROUPS).map((group) => (
                   <Button
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
+                    key={group}
+                    variant={selectedCategory === group ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedCategory(category)}
+                    onClick={() => setSelectedCategory(group)}
                   >
-                    {category}
+                    {group}
                   </Button>
                 ))}
+
                 <CartDrawer />
               </div>
             </div>
@@ -139,6 +202,7 @@ const Produtos = () => {
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
+                  id={product.id}
                   name={product.name}
                   type={product.type}
                   price={product.price}
