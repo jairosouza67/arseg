@@ -15,7 +15,8 @@ const relsXml = fs.readFileSync(relsXmlPath, 'utf8');
 
 // Parse relations
 const relations = {};
-const relMatches = relsXml.matchAll(/Relationship Id="(rId\d+)" .*? Target="(media\/image\d+\.(png|jpg|jpeg|gif))"/g);
+// Fix: Use [^>]*? to avoid consuming multiple tags if Target is not an image
+const relMatches = relsXml.matchAll(/Relationship Id="(rId\d+)"[^>]*?Target="(media\/image\d+\.(png|jpg|jpeg|gif))"/g);
 for (const match of relMatches) {
     relations[match[1]] = match[2];
 }
@@ -23,6 +24,9 @@ for (const match of relMatches) {
 // Extract Row Blobs
 const rowMatches = docXml.matchAll(/<w:tr[\s\S]*?<\/w:tr>/g);
 const products = [];
+
+let lastProductName = '';
+let lastProductDescription = '';
 
 for (const match of rowMatches) {
     const rowContent = match[0];
@@ -34,92 +38,131 @@ for (const match of rowMatches) {
     text = text.replace(/\s+/g, ' ').trim();
 
     // Extract image rId
-    const imgMatch = rowContent.match(/r:embed="(rId\d+)"/);
+    // Fix: Robust regex for potential namespaces or spacing
+    const imgMatch = rowContent.match(/(?:embed|id)\s*=\s*["'](rId\d+)["']/);
     const rId = imgMatch ? imgMatch[1] : null;
 
-    if (text && rId && relations[rId]) {
-        if (text.toLowerCase().includes('produto e descrição')) continue;
+    // Check if this row has meaningful text (product info)
+    let name = '';
+    let description = '';
 
-        let name = '';
-        let description = '';
-
+    // Logic to identify valid product rows vs headers or empty
+    if (text && !text.toLowerCase().includes('produto e descrição') && text.length > 5) {
         const descLower = text.toLowerCase();
         const descTerm = 'descrição';
         const descIdx = descLower.indexOf(descTerm);
 
         if (descIdx !== -1) {
             name = text.substring(0, descIdx).trim();
-            // Find colon after "descrição"
             const afterDesc = text.substring(descIdx + descTerm.length).trim();
             description = afterDesc.replace(/^[:]\s*/, '').trim();
         } else {
-            name = text;
+            // Only update if it looks like a product name (has numbers or specific keywords)
+            if (/\d/.test(text) || text.toLowerCase().includes('extintor') ||
+                text.toLowerCase().includes('mangueira') || text.toLowerCase().includes('válvula') ||
+                text.toLowerCase().includes('suporte') || text.toLowerCase().includes('sifão')) {
+                name = text;
+            }
         }
 
-        // Clean name
-        name = name.replace(/^\d+[\.\s]+/, '').trim();
-        // Fix spaces inside words if they exist (sometimes Word breaks them)
-        name = name.replace(/E\s+xtintor/gi, 'Extintor');
-        name = name.replace(/P\s+ó/gi, 'Pó');
-        name = name.replace(/C\s+O²/gi, 'CO²');
+        // Clean name if we got one
+        if (name) {
+            name = name.replace(/^\d+[\.\s]+/, '').trim();
+            name = name.replace(/E\s+xtintor/gi, 'Extintor');
+            name = name.replace(/P\s+ó/gi, 'Pó');
+            name = name.replace(/C\s+O²/gi, 'CO²');
 
-        if (name.length > 200) name = name.substring(0, 200);
-        if (!name) name = `Produto-${rId}`;
+            if (name.length > 200) name = name.substring(0, 200);
 
-        const filename = name.toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]/g, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '') + '.png';
+            // Update last known product info
+            // This handles merged cells where image is in a subsequent row without name
+            lastProductName = name;
+            lastProductDescription = description;
+        }
+    }
 
-        products.push({
-            name,
-            description,
-            rId,
-            mediaPath: relations[rId],
-            filename
-        });
+    // Process if we have an image and a valid product name (current or from previous row)
+    if (rId && relations[rId]) {
+        const productName = name || lastProductName;
+        const productDesc = name ? description : lastProductDescription;
+
+        if (productName) {
+            const filename = productName.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') + '.png';
+
+            products.push({
+                name: productName,
+                description: productDesc,
+                rId,
+                mediaPath: relations[rId],
+                filename
+            });
+        }
     }
 }
 
 console.log(`Found ${products.length} products in docx.`);
 
 let sql = '-- Migration: 007_add_complete_product_catalog.sql\n';
-sql += '-- Catálogo atualizado conforme documento DOCX\n\n';
+sql += '-- Catálogo sincronizado conforme documento DOCX\n\n';
+sql += '-- Garantir unicidade para UPSERT\n';
+sql += 'DELETE FROM public.products a USING public.products b WHERE a.id < b.id AND a.name = b.name;\n';
+sql += 'CREATE UNIQUE INDEX IF NOT EXISTS products_name_key ON public.products (name);\n\n';
 sql += 'INSERT INTO public.products (name, type, description, in_stock, price, image_url)\n';
-sql += 'SELECT name, type, description, in_stock, price, image_url FROM (VALUES\n';
+sql += 'VALUES\n';
 
 const values = [];
-const seenNames = new Set();
+const seenNames = {};
 
 for (const p of products) {
-    if (seenNames.has(p.name)) continue;
-    seenNames.add(p.name);
+    let finalName = p.name;
+    let finalFilename = p.filename;
+
+    // Normalizar nome para comparação
+    const normalizedName = p.name.toUpperCase().trim();
+
+    // Contar ocorrências para gerar nomes únicos
+    if (seenNames[normalizedName] === undefined) {
+        seenNames[normalizedName] = 1;
+    } else {
+        seenNames[normalizedName]++;
+
+        // Se já existe, adicionar sufixo para torná-lo único
+        const count = seenNames[normalizedName];
+        finalName = `${p.name} (${count})`;
+
+        // Ajustar nome do arquivo também para evitar sobrescrever
+        finalFilename = finalFilename.replace('.png', `-${count}.png`);
+    }
 
     const src = path.join('Docs/temp_extract/word', p.mediaPath);
-    const dest = path.join(outputDir, p.filename);
+    const dest = path.join(outputDir, finalFilename);
 
     if (fs.existsSync(src)) {
         try {
             fs.copyFileSync(src, dest);
 
-            // Determine type
+            // Determine type logic
             let type = 'Acessórios';
-            const n = p.name.toLowerCase();
+            const n = finalName.toLowerCase();
             if (n.includes('extintor')) type = 'Extintor';
-            else if (n.includes('válvula')) type = 'Componentes';
+            else if (n.includes('válvula') || n.includes('valvula')) type = 'Componentes';
             else if (n.includes('mangueira')) type = 'Mangueira';
-            else if (n.includes('sifão')) type = 'Sifão';
-            else if (n.includes('placa') || n.match(/^[spea]-\d+/i)) type = 'Sinalização';
+            else if (n.includes('sifão') || n.includes('sifao')) type = 'Sifão';
+            else if (n.includes('placa') || n.match(/^[spea]-\d+/i) || n.includes('sinalização')) type = 'Sinalização';
             else if (n.includes('tripé') || n.includes('suporte')) type = 'Suporte';
-            else if (n.includes('luminária') || n.includes('balizamento')) type = 'Iluminação';
+            else if (n.includes('luminária') || n.includes('balizamento') || n.includes('iluminação')) type = 'Iluminação';
             else if (n.includes('fita')) type = 'Fitas';
-            else if (n.includes('pó')) type = 'Agente Extintor';
-            else if (n.includes('registro') || n.includes('esguicho') || n.includes('storz')) type = 'Combate a Incêndio';
+            else if (n.includes('pó') || n.includes('agente')) type = 'Agente Extintor';
+            else if (n.includes('registro') || n.includes('esguicho') || n.includes('storz') || n.includes('uniao') || n.includes('adaptador')) type = 'Combate a Incêndio';
+            else if (n.includes('alarme') || n.includes('detector') || n.includes('acionador')) type = 'Alarme';
 
-            const escapedName = p.name.replace(/'/g, "''");
+            const escapedName = finalName.replace(/'/g, "''").toUpperCase();
             const escapedDesc = p.description.replace(/'/g, "''");
-            const imageUrl = '/products/' + p.filename;
+            const imageUrl = '/products/' + finalFilename;
 
             values.push(`('${escapedName}', '${type}', '${escapedDesc}', true, 0, '${imageUrl}')`);
         } catch (e) {
@@ -129,10 +172,10 @@ for (const p of products) {
 }
 
 sql += values.join(',\n');
-sql += '\n) AS t (name, type, description, in_stock, price, image_url)\n';
-sql += 'WHERE NOT EXISTS (\n';
-sql += '    SELECT 1 FROM public.products p WHERE p.name = t.name\n';
-sql += ');\n';
+sql += '\nON CONFLICT (name) DO UPDATE SET \n';
+sql += '  image_url = EXCLUDED.image_url,\n';
+sql += '  description = EXCLUDED.description,\n';
+sql += '  type = EXCLUDED.type;\n';
 
 fs.writeFileSync('migrations/007_add_complete_product_catalog.sql', sql);
-console.log(`Generated migration with ${values.length} unique products.`);
+console.log(`Generated migration with ${values.length} products (UPSERT mode).`);
