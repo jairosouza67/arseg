@@ -313,6 +313,13 @@ const Orcamentos = () => {
                             .filter((product) =>
                               product.name.toLowerCase().includes(productSearch.toLowerCase())
                             )
+                            .sort((a, b) => {
+                              const aIsExtintor = a.name?.toLowerCase().startsWith('extintor');
+                              const bIsExtintor = b.name?.toLowerCase().startsWith('extintor');
+                              if (aIsExtintor && !bIsExtintor) return -1;
+                              if (!aIsExtintor && bIsExtintor) return 1;
+                              return a.name.localeCompare(b.name);
+                            })
                             .map((product) => (
                               <SelectItem key={product.id} value={product.id}>
                                 {product.name}

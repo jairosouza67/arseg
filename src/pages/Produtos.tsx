@@ -117,11 +117,9 @@ const Produtos = () => {
     }
 
     // Ordenação customizada: Extintores primeiro, depois o restante em ordem alfabética
-    // Verifica se é um extintor real: tipo "Extintor" E nome começa com "Extintor"
+    // Verifica se o nome começa com "Extintor"
     const isRealExtintor = (product: { type: string; name: string }) => {
-      const typeIsExtintor = product.type?.toLowerCase() === "extintor";
-      const nameStartsWithExtintor = product.name?.toLowerCase().startsWith("extintor");
-      return typeIsExtintor && nameStartsWithExtintor;
+      return product.name?.toLowerCase().startsWith("extintor");
     };
 
     const sortedProducts = (data || []).sort((a, b) => {
@@ -454,11 +452,9 @@ const Produtos = () => {
         <section className="py-12">
           <div className="container">
             {(() => {
-              // Função para verificar se é extintor real: tipo "Extintor" E nome começa com "Extintor"
+              // Função para verificar se o nome começa com "Extintor"
               const isExtintor = (product: Product) => {
-                const typeIsExtintor = product.type?.toLowerCase() === "extintor";
-                const nameStartsWithExtintor = product.name?.toLowerCase().startsWith("extintor");
-                return typeIsExtintor && nameStartsWithExtintor;
+                return product.name?.toLowerCase().startsWith("extintor");
               };
 
               // Separar produtos em extintores e outros
