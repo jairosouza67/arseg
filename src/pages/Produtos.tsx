@@ -66,8 +66,7 @@ const Produtos = () => {
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from("products")
-      .select("*")
-      .order("name");
+      .select("*");
 
     if (error) {
       toast({
@@ -78,7 +77,27 @@ const Produtos = () => {
       return;
     }
 
-    setProducts(data || []);
+    // Ordenação customizada: Extintores primeiro, depois o restante em ordem alfabética
+    // Verifica se é um extintor real: tipo "Extintor" E nome começa com "Extintor"
+    const isRealExtintor = (product: { type: string; name: string }) => {
+      const typeIsExtintor = product.type?.toLowerCase() === "extintor";
+      const nameStartsWithExtintor = product.name?.toLowerCase().startsWith("extintor");
+      return typeIsExtintor && nameStartsWithExtintor;
+    };
+
+    const sortedProducts = (data || []).sort((a, b) => {
+      const aIsExtintor = isRealExtintor(a);
+      const bIsExtintor = isRealExtintor(b);
+
+      // Se um é extintor e o outro não, extintor vem primeiro
+      if (aIsExtintor && !bIsExtintor) return -1;
+      if (!aIsExtintor && bIsExtintor) return 1;
+
+      // Se ambos são do mesmo tipo (ambos extintores ou ambos não-extintores), ordena alfabeticamente
+      return a.name.localeCompare(b.name, "pt-BR");
+    });
+
+    setProducts(sortedProducts);
   };
 
   const openEditDialog = (product: Product) => {
@@ -362,22 +381,71 @@ const Produtos = () => {
         {/* Products Grid */}
         <section className="py-12">
           <div className="container">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  type={product.type}
-                  price={product.price}
-                  inStock={product.in_stock}
-                  image={product.image_url ?? getProductImage(product)}
-                  onAddToQuote={() => handleAddToCart(product)}
-                  onEdit={isAdmin ? () => openEditDialog(product) : undefined}
-                  onDelete={isAdmin ? () => handleDeleteProduct(product.id, product.name) : undefined}
-                />
-              ))}
-            </div>
+            {(() => {
+              // Função para verificar se é extintor real: tipo "Extintor" E nome começa com "Extintor"
+              const isExtintor = (product: Product) => {
+                const typeIsExtintor = product.type?.toLowerCase() === "extintor";
+                const nameStartsWithExtintor = product.name?.toLowerCase().startsWith("extintor");
+                return typeIsExtintor && nameStartsWithExtintor;
+              };
+
+              // Separar produtos em extintores e outros
+              const extintores = filteredProducts.filter(isExtintor);
+              const outrosProdutos = filteredProducts.filter(p => !isExtintor(p));
+
+              return (
+                <>
+                  {/* Extintores */}
+                  {extintores.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {extintores.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          id={product.id}
+                          name={product.name}
+                          type={product.type}
+                          price={product.price}
+                          inStock={product.in_stock}
+                          image={product.image_url ?? getProductImage(product)}
+                          onAddToQuote={() => handleAddToCart(product)}
+                          onEdit={isAdmin ? () => openEditDialog(product) : undefined}
+                          onDelete={isAdmin ? () => handleDeleteProduct(product.id, product.name) : undefined}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Separador - Mais Produtos */}
+                  {extintores.length > 0 && outrosProdutos.length > 0 && (
+                    <div className="my-12 flex items-center gap-4">
+                      <div className="flex-1 h-px bg-border"></div>
+                      <h2 className="text-2xl font-semibold text-muted-foreground">Mais Produtos</h2>
+                      <div className="flex-1 h-px bg-border"></div>
+                    </div>
+                  )}
+
+                  {/* Outros Produtos */}
+                  {outrosProdutos.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {outrosProdutos.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          id={product.id}
+                          name={product.name}
+                          type={product.type}
+                          price={product.price}
+                          inStock={product.in_stock}
+                          image={product.image_url ?? getProductImage(product)}
+                          onAddToQuote={() => handleAddToCart(product)}
+                          onEdit={isAdmin ? () => openEditDialog(product) : undefined}
+                          onDelete={isAdmin ? () => handleDeleteProduct(product.id, product.name) : undefined}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {filteredProducts.length === 0 && (
               <div className="text-center py-20">
