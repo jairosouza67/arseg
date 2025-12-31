@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Send, Download, Plus, Trash2, FileDown } from "lucide-react";
+import { FileText, Send, Download, Plus, Trash2, FileDown, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
@@ -38,6 +38,7 @@ const Orcamentos = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [manualItems, setManualItems] = useState<ManualItem[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [productSearch, setProductSearch] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
   const [lastCreatedQuote, setLastCreatedQuote] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -284,17 +285,46 @@ const Orcamentos = () => {
                     <div className="flex gap-2 mb-4">
                       <Select
                         value={selectedProductId}
-                        onValueChange={setSelectedProductId}
+                        onValueChange={(value) => {
+                          setSelectedProductId(value);
+                          setProductSearch("");
+                        }}
+                        onOpenChange={(open) => {
+                          if (!open) setProductSearch("");
+                        }}
                       >
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Selecione um produto" />
                         </SelectTrigger>
                         <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name}
-                            </SelectItem>
-                          ))}
+                          <div className="p-2 sticky top-0 bg-popover border-b">
+                            <div className="relative">
+                              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Buscar produto..."
+                                value={productSearch}
+                                onChange={(e) => setProductSearch(e.target.value)}
+                                className="pl-8 h-8"
+                                onKeyDown={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          {products
+                            .filter((product) =>
+                              product.name.toLowerCase().includes(productSearch.toLowerCase())
+                            )
+                            .map((product) => (
+                              <SelectItem key={product.id} value={product.id}>
+                                {product.name}
+                              </SelectItem>
+                            ))}
+                          {products.filter((product) =>
+                            product.name.toLowerCase().includes(productSearch.toLowerCase())
+                          ).length === 0 && (
+                              <div className="py-2 px-4 text-sm text-muted-foreground text-center">
+                                Nenhum produto encontrado
+                              </div>
+                            )}
                         </SelectContent>
                       </Select>
                       <Input
