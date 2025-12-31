@@ -32,3 +32,6 @@ yarn-error.log*
 
 # Trae
 .trae
+
+# MCP Settings (contains secrets)
+.vscode/mcp_settings.json
