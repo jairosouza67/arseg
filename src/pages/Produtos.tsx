@@ -14,6 +14,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { MobileNav } from "@/components/MobileNav";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { useSearchParams } from "react-router-dom";
 
 import {
   Select,
@@ -78,6 +79,7 @@ const matchesCategory = (product: { type: string; name: string }, category: stri
 };
 
 const Produtos = () => {
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [products, setProducts] = useState<Product[]>([]);
@@ -97,6 +99,14 @@ const Produtos = () => {
   const { addItem } = useCart();
   const { toast } = useToast();
   const { isAdmin } = useAuthRole();
+
+  // Read category from URL parameter on mount
+  useEffect(() => {
+    const categoryParam = searchParams.get("categoria");
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchProducts();

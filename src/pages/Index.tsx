@@ -1,6 +1,8 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { ProductShowcase } from "@/components/ProductShowcase";
 import { ProductCategories } from "@/components/ProductCategories";
+import { OtherProducts } from "@/components/OtherProducts";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -10,11 +12,15 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 pb-20 md:pb-0">
         <Hero />
-        
+
+        <ProductShowcase />
+
         <ProductCategories />
+
+        <OtherProducts />
 
         {/* CTA Section */}
         <section className="py-24 bg-gradient-hero relative overflow-hidden">
@@ -47,3 +53,4 @@ const Index = () => {
 };
 
 export default Index;
+
