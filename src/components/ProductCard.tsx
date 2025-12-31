@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface ProductCardProps {
@@ -12,6 +12,8 @@ interface ProductCardProps {
   image?: string;
   inStock: boolean;
   onAddToQuote?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export const ProductCard = ({
@@ -22,6 +24,8 @@ export const ProductCard = ({
   image,
   inStock,
   onAddToQuote,
+  onEdit,
+  onDelete,
 }: ProductCardProps) => {
   const navigate = useNavigate();
 
@@ -49,6 +53,36 @@ export const ProductCard = ({
           >
             {inStock ? "Em Estoque" : "Sob Consulta"}
           </Badge>
+          {(onEdit || onDelete) && (
+            <div className="absolute top-4 left-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {onEdit && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="shadow-md h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit();
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="shadow-md h-8 w-8 hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </CardHeader>
 

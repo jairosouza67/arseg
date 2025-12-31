@@ -4,12 +4,16 @@ import { ProductCard } from "@/components/ProductCard";
 import { CartDrawer } from "@/components/CartDrawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Upload, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { MobileNav } from "@/components/MobileNav";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 import {
   Select,
@@ -38,8 +42,22 @@ const Produtos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [products, setProducts] = useState<Product[]>([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    type: "",
+    price: 0,
+    in_stock: true,
+    description: "",
+    image_url: "",
+  });
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { isAdmin } = useAuthRole();
 
   useEffect(() => {
     fetchProducts();
@@ -62,6 +80,152 @@ const Produtos = () => {
 
     setProducts(data || []);
   };
+
+  const openEditDialog = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      type: product.type,
+      price: product.price,
+      in_stock: product.in_stock,
+      description: "",
+      image_url: product.image_url || "",
+    });
+    setImagePreview(product.image_url || null);
+    setSelectedImage(null);
+    setIsEditDialogOpen(true);
+  };
+
+  const closeEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingProduct(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const processImageFile = (file: File) => {
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          processImageFile(file);
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image_url: "" });
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!confirm(`Tem certeza que deseja excluir "${productName}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    const { error } = await supabase.from("products").delete().eq("id", productId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir o produto.",
+      });
+    } else {
+      toast({
+        title: "Sucesso",
+        description: "Produto excluído com sucesso.",
+      });
+      fetchProducts();
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    setIsUploading(true);
+    let imageUrl = formData.image_url;
+
+    // Upload image if a new one was selected
+    if (selectedImage) {
+      const fileExt = selectedImage.name.split(".").pop() || "png";
+      const fileName = `${editingProduct.id}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(fileName, selectedImage, { upsert: true });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast({
+          variant: "destructive",
+          title: "Erro no upload",
+          description: uploadError.message || "Não foi possível fazer upload da imagem. Verifique se o bucket 'products' existe no Supabase.",
+        });
+        setIsUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(fileName);
+
+      imageUrl = urlData.publicUrl;
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .update({
+        name: formData.name,
+        type: formData.type,
+        price: formData.price,
+        in_stock: formData.in_stock,
+        image_url: imageUrl || null,
+      })
+      .eq("id", editingProduct.id);
+
+    setIsUploading(false);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível atualizar o produto.",
+      });
+    } else {
+      toast({
+        title: "Sucesso",
+        description: "Produto atualizado com sucesso.",
+      });
+      fetchProducts();
+      closeEditDialog();
+    }
+  };
+
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -209,6 +373,8 @@ const Produtos = () => {
                   inStock={product.in_stock}
                   image={product.image_url ?? getProductImage(product)}
                   onAddToQuote={() => handleAddToCart(product)}
+                  onEdit={isAdmin ? () => openEditDialog(product) : undefined}
+                  onDelete={isAdmin ? () => handleDeleteProduct(product.id, product.name) : undefined}
                 />
               ))}
             </div>
@@ -226,6 +392,111 @@ const Produtos = () => {
 
       <Footer />
       <MobileNav />
+
+      {/* Edit Product Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Produto</DialogTitle>
+            <DialogDescription>
+              Atualize os dados do produto
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4" onPaste={handlePaste}>
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome *</Label>
+              <Input
+                id="edit-name"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-type">Tipo *</Label>
+              <Input
+                id="edit-type"
+                required
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-price">Preço *</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                step="0.01"
+                required
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit-in_stock"
+                checked={formData.in_stock}
+                onCheckedChange={(checked) => setFormData({ ...formData, in_stock: checked })}
+              />
+              <Label htmlFor="edit-in_stock">Em Estoque</Label>
+            </div>
+
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <Label>Imagem do Produto</Label>
+              {imagePreview ? (
+                <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={removeImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="edit-image-upload"
+                  />
+                  <label
+                    htmlFor="edit-image-upload"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">
+                      Clique para adicionar imagem
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      ou cole uma imagem (Ctrl+V)
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button type="submit" className="flex-1" disabled={isUploading}>
+                {isUploading ? "Salvando..." : "Salvar"}
+              </Button>
+              <Button type="button" variant="outline" onClick={closeEditDialog} disabled={isUploading}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
