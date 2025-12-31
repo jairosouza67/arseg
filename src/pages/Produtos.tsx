@@ -32,10 +32,38 @@ interface Product {
   image_url: string | null;
 }
 
-const CATEGORY_GROUPS: Record<string, string[]> = {
-  "Equipamentos & Combate": ["Mangueira", "Combate a Incêndio"],
-  "Sinalização & Luz": ["Sinalização", "Iluminação"],
-  "Peças & Acessórios": ["Componentes", "Acessórios", "Sifão", "Suporte", "Fitas", "Agente Extintor"],
+// Subcategorias para cada dropdown
+const CATEGORY_SUBCATEGORIES: Record<string, { value: string; label: string; types: string[] }[]> = {
+  "equipamentos": [
+    { value: "equipamentos-all", label: "Todos Equipamentos", types: ["Mangueira", "Combate a Incêndio", "Hidrante", "Sprinkler"] },
+    { value: "equipamentos-mangueira", label: "Mangueiras", types: ["Mangueira"] },
+    { value: "equipamentos-hidrante", label: "Hidrantes", types: ["Hidrante"] },
+    { value: "equipamentos-combate", label: "Combate a Incêndio", types: ["Combate a Incêndio"] },
+    { value: "equipamentos-sprinkler", label: "Sprinklers", types: ["Sprinkler"] },
+  ],
+  "sinalizacao": [
+    { value: "sinalizacao-all", label: "Todos Sinalização", types: ["Sinalização", "Iluminação", "Placa", "Luminária"] },
+    { value: "sinalizacao-placas", label: "Placas de Sinalização", types: ["Sinalização", "Placa"] },
+    { value: "sinalizacao-iluminacao", label: "Iluminação de Emergência", types: ["Iluminação", "Luminária"] },
+  ],
+  "pecas": [
+    { value: "pecas-all", label: "Todos Peças", types: ["Componentes", "Acessórios", "Sifão", "Suporte", "Fitas", "Agente Extintor", "Válvula", "Manômetro"] },
+    { value: "pecas-sifao", label: "Sifões", types: ["Sifão"] },
+    { value: "pecas-suporte", label: "Suportes", types: ["Suporte"] },
+    { value: "pecas-valvula", label: "Válvulas e Manômetros", types: ["Válvula", "Manômetro"] },
+    { value: "pecas-agente", label: "Agentes Extintores", types: ["Agente Extintor"] },
+    { value: "pecas-fitas", label: "Fitas e Adesivos", types: ["Fitas"] },
+    { value: "pecas-acessorios", label: "Outros Acessórios", types: ["Acessórios", "Componentes"] },
+  ],
+};
+
+// Função para obter tipos de uma subcategoria
+const getTypesForCategory = (category: string): string[] | null => {
+  for (const group of Object.values(CATEGORY_SUBCATEGORIES)) {
+    const found = group.find(sub => sub.value === category);
+    if (found) return found.types;
+  }
+  return null;
 };
 
 const Produtos = () => {
@@ -268,8 +296,8 @@ const Produtos = () => {
       return true;
     }
 
-    // Lógica para Grupos Genéricos
-    const groupTypes = CATEGORY_GROUPS[selectedCategory];
+    // Lógica para os novos dropdowns de subcategorias
+    const groupTypes = getTypesForCategory(selectedCategory);
     if (groupTypes) {
       return groupTypes.includes(product.type);
     }
@@ -361,16 +389,50 @@ const Produtos = () => {
                   </SelectContent>
                 </Select>
 
-                {Object.keys(CATEGORY_GROUPS).map((group) => (
-                  <Button
-                    key={group}
-                    variant={selectedCategory === group ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(group)}
-                  >
-                    {group}
-                  </Button>
-                ))}
+                {/* Dropdown Equipamentos & Combate */}
+                <Select
+                  onValueChange={setSelectedCategory}
+                  value={selectedCategory.startsWith("equipamentos-") ? selectedCategory : undefined}
+                >
+                  <SelectTrigger className={`h-9 w-[180px] ${selectedCategory.startsWith("equipamentos-") ? "bg-primary text-primary-foreground" : ""}`}>
+                    <SelectValue placeholder="Equipamentos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_SUBCATEGORIES["equipamentos"].map((sub) => (
+                      <SelectItem key={sub.value} value={sub.value}>{sub.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Dropdown Sinalização & Luz */}
+                <Select
+                  onValueChange={setSelectedCategory}
+                  value={selectedCategory.startsWith("sinalizacao-") ? selectedCategory : undefined}
+                >
+                  <SelectTrigger className={`h-9 w-[180px] ${selectedCategory.startsWith("sinalizacao-") ? "bg-primary text-primary-foreground" : ""}`}>
+                    <SelectValue placeholder="Sinalização" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_SUBCATEGORIES["sinalizacao"].map((sub) => (
+                      <SelectItem key={sub.value} value={sub.value}>{sub.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Dropdown Peças & Acessórios */}
+                <Select
+                  onValueChange={setSelectedCategory}
+                  value={selectedCategory.startsWith("pecas-") ? selectedCategory : undefined}
+                >
+                  <SelectTrigger className={`h-9 w-[180px] ${selectedCategory.startsWith("pecas-") ? "bg-primary text-primary-foreground" : ""}`}>
+                    <SelectValue placeholder="Peças" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_SUBCATEGORIES["pecas"].map((sub) => (
+                      <SelectItem key={sub.value} value={sub.value}>{sub.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
                 <CartDrawer />
               </div>
