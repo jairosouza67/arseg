@@ -32,38 +32,49 @@ interface Product {
   image_url: string | null;
 }
 
-// Subcategorias para cada dropdown
-const CATEGORY_SUBCATEGORIES: Record<string, { value: string; label: string; types: string[] }[]> = {
+// Subcategorias para cada dropdown - inclui types e keywords para busca no nome
+const CATEGORY_SUBCATEGORIES: Record<string, { value: string; label: string; types: string[]; keywords: string[] }[]> = {
   "equipamentos": [
-    { value: "equipamentos-all", label: "Todos Equipamentos", types: ["Mangueira", "Combate a Incêndio", "Hidrante", "Sprinkler"] },
-    { value: "equipamentos-mangueira", label: "Mangueiras", types: ["Mangueira"] },
-    { value: "equipamentos-hidrante", label: "Hidrantes", types: ["Hidrante"] },
-    { value: "equipamentos-combate", label: "Combate a Incêndio", types: ["Combate a Incêndio"] },
-    { value: "equipamentos-sprinkler", label: "Sprinklers", types: ["Sprinkler"] },
+    { value: "equipamentos-all", label: "Todos Equipamentos", types: ["Mangueira", "Combate a Incêndio", "Hidrante", "Sprinkler", "Combate"], keywords: ["mangueira", "hidrante", "sprinkler", "combate", "esguicho", "registro"] },
+    { value: "equipamentos-mangueira", label: "Mangueiras", types: ["Mangueira"], keywords: ["mangueira"] },
+    { value: "equipamentos-hidrante", label: "Hidrantes", types: ["Hidrante"], keywords: ["hidrante"] },
+    { value: "equipamentos-combate", label: "Combate a Incêndio", types: ["Combate a Incêndio", "Combate"], keywords: ["combate", "esguicho", "registro"] },
+    { value: "equipamentos-sprinkler", label: "Sprinklers", types: ["Sprinkler"], keywords: ["sprinkler", "chuveiro"] },
   ],
   "sinalizacao": [
-    { value: "sinalizacao-all", label: "Todos Sinalização", types: ["Sinalização", "Iluminação", "Placa", "Luminária"] },
-    { value: "sinalizacao-placas", label: "Placas de Sinalização", types: ["Sinalização", "Placa"] },
-    { value: "sinalizacao-iluminacao", label: "Iluminação de Emergência", types: ["Iluminação", "Luminária"] },
+    { value: "sinalizacao-all", label: "Todos Sinalização", types: ["Sinalização", "Iluminação", "Placa", "Luminária", "Luz"], keywords: ["sinalização", "placa", "iluminação", "luminária", "luz", "emergência", "balizamento", "led"] },
+    { value: "sinalizacao-placas", label: "Placas de Sinalização", types: ["Sinalização", "Placa"], keywords: ["sinalização", "placa", "indicativa", "aviso"] },
+    { value: "sinalizacao-iluminacao", label: "Iluminação de Emergência", types: ["Iluminação", "Luminária", "Luz"], keywords: ["iluminação", "luminária", "luz", "emergência", "balizamento", "led", "bloco"] },
   ],
   "pecas": [
-    { value: "pecas-all", label: "Todos Peças", types: ["Componentes", "Acessórios", "Sifão", "Suporte", "Fitas", "Agente Extintor", "Válvula", "Manômetro"] },
-    { value: "pecas-sifao", label: "Sifões", types: ["Sifão"] },
-    { value: "pecas-suporte", label: "Suportes", types: ["Suporte"] },
-    { value: "pecas-valvula", label: "Válvulas e Manômetros", types: ["Válvula", "Manômetro"] },
-    { value: "pecas-agente", label: "Agentes Extintores", types: ["Agente Extintor"] },
-    { value: "pecas-fitas", label: "Fitas e Adesivos", types: ["Fitas"] },
-    { value: "pecas-acessorios", label: "Outros Acessórios", types: ["Acessórios", "Componentes"] },
+    { value: "pecas-all", label: "Todos Peças", types: ["Componentes", "Acessórios", "Sifão", "Suporte", "Fitas", "Agente Extintor", "Válvula", "Manômetro", "Peça", "Acessório"], keywords: ["sifão", "suporte", "válvula", "manômetro", "fita", "agente", "lacre", "anel", "gatilho", "difusor", "base", "pino", "vedação"] },
+    { value: "pecas-sifao", label: "Sifões", types: ["Sifão"], keywords: ["sifão", "sifao"] },
+    { value: "pecas-suporte", label: "Suportes", types: ["Suporte"], keywords: ["suporte", "base", "pedestal"] },
+    { value: "pecas-valvula", label: "Válvulas e Manômetros", types: ["Válvula", "Manômetro"], keywords: ["válvula", "valvula", "manômetro", "manometro", "pressão"] },
+    { value: "pecas-agente", label: "Agentes Extintores", types: ["Agente Extintor", "Agente"], keywords: ["agente", "pó químico", "po quimico", "co2", "espuma", "recarga"] },
+    { value: "pecas-fitas", label: "Fitas e Adesivos", types: ["Fitas", "Fita"], keywords: ["fita", "adesivo", "lacre", "selo"] },
+    { value: "pecas-acessorios", label: "Outros Acessórios", types: ["Acessórios", "Componentes", "Acessório", "Componente"], keywords: ["anel", "gatilho", "difusor", "pino", "vedação", "mola"] },
   ],
 };
 
-// Função para obter tipos de uma subcategoria
-const getTypesForCategory = (category: string): string[] | null => {
+// Função para verificar se um produto corresponde a uma subcategoria
+const matchesCategory = (product: { type: string; name: string }, category: string): boolean => {
   for (const group of Object.values(CATEGORY_SUBCATEGORIES)) {
     const found = group.find(sub => sub.value === category);
-    if (found) return found.types;
+    if (found) {
+      // Verifica se o tipo do produto corresponde
+      const typeMatches = found.types.some(t =>
+        product.type?.toLowerCase() === t.toLowerCase()
+      );
+      if (typeMatches) return true;
+
+      // Verifica se o nome do produto contém alguma keyword
+      const nameLower = product.name?.toLowerCase() || "";
+      const keywordMatches = found.keywords.some(k => nameLower.includes(k));
+      if (keywordMatches) return true;
+    }
   }
-  return null;
+  return false;
 };
 
 const Produtos = () => {
@@ -297,9 +308,8 @@ const Produtos = () => {
     }
 
     // Lógica para os novos dropdowns de subcategorias
-    const groupTypes = getTypesForCategory(selectedCategory);
-    if (groupTypes) {
-      return groupTypes.includes(product.type);
+    if (matchesCategory(product, selectedCategory)) {
+      return true;
     }
 
     return product.type === selectedCategory;
