@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Download, Package } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Download, Package, Upload, X } from "lucide-react";
 
 interface Product {
   id: string;
@@ -18,6 +18,7 @@ interface Product {
   price: number;
   in_stock: boolean;
   description: string | null;
+  image_url: string | null;
   created_at: string;
 }
 
@@ -27,12 +28,16 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     type: "",
     price: 0,
     in_stock: true,
     description: "",
+    image_url: "",
   });
 
   useEffect(() => {
@@ -56,14 +61,169 @@ const Products = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const processImageFile = (file: File) => {
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          processImageFile(file);
+          e.preventDefault();
+          break;
+        }
+      }
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image_url: "" });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setIsUploading(true);
+    let imageUrl = formData.image_url;
+
+    // If we are creating a new product and the user selected an image,
+    // we need an id first (to name the file consistently) then upload and update.
+    if (!editingProduct) {
+      const { data: insertedProduct, error: insertError } = await supabase
+        .from("products")
+        .insert([
+          {
+            name: formData.name,
+            type: formData.type,
+            price: formData.price,
+            in_stock: formData.in_stock,
+            description: formData.description,
+            image_url: selectedImage ? null : (imageUrl || null),
+          },
+        ])
+        .select("*")
+        .single();
+
+      if (insertError) {
+        setIsUploading(false);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível adicionar o produto.",
+        });
+        return;
+      }
+
+      // Upload image if selected
+      if (selectedImage) {
+        const fileExt = selectedImage.name.split(".").pop() || "png";
+        const fileName = `${insertedProduct.id}-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(fileName, selectedImage, { upsert: true });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          setIsUploading(false);
+          toast({
+            variant: "destructive",
+            title: "Erro no upload",
+            description:
+              uploadError.message ||
+              "Não foi possível fazer upload da imagem. Verifique se o bucket 'products' existe no Supabase.",
+          });
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+
+        const { error: updateError } = await supabase
+          .from("products")
+          .update({ image_url: imageUrl || null })
+          .eq("id", insertedProduct.id);
+
+        if (updateError) {
+          setIsUploading(false);
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Produto criado, mas não foi possível salvar a imagem.",
+          });
+          return;
+        }
+      }
+
+      setIsUploading(false);
+      toast({
+        title: "Sucesso",
+        description: "Produto adicionado com sucesso.",
+      });
+      fetchProducts();
+      closeDialog();
+      return;
+    }
+
     if (editingProduct) {
+      // Upload image if a new one was selected
+      if (selectedImage) {
+        const fileExt = selectedImage.name.split(".").pop() || "png";
+        const fileName = `${editingProduct.id}-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(fileName, selectedImage, { upsert: true });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          setIsUploading(false);
+          toast({
+            variant: "destructive",
+            title: "Erro no upload",
+            description:
+              uploadError.message ||
+              "Não foi possível fazer upload da imagem. Verifique se o bucket 'products' existe no Supabase.",
+          });
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+      }
+
       const { error } = await supabase
         .from("products")
-        .update(formData)
+        .update({
+          name: formData.name,
+          type: formData.type,
+          price: formData.price,
+          in_stock: formData.in_stock,
+          description: formData.description,
+          image_url: imageUrl || null,
+        })
         .eq("id", editingProduct.id);
+
+      setIsUploading(false);
 
       if (error) {
         toast({
@@ -75,23 +235,6 @@ const Products = () => {
         toast({
           title: "Sucesso",
           description: "Produto atualizado com sucesso.",
-        });
-        fetchProducts();
-        closeDialog();
-      }
-    } else {
-      const { error } = await supabase.from("products").insert([formData]);
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível adicionar o produto.",
-        });
-      } else {
-        toast({
-          title: "Sucesso",
-          description: "Produto adicionado com sucesso.",
         });
         fetchProducts();
         closeDialog();
@@ -128,7 +271,10 @@ const Products = () => {
         price: product.price,
         in_stock: product.in_stock,
         description: product.description || "",
+        image_url: product.image_url || "",
       });
+      setImagePreview(product.image_url || null);
+      setSelectedImage(null);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -137,7 +283,10 @@ const Products = () => {
         price: 0,
         in_stock: true,
         description: "",
+        image_url: "",
       });
+      setSelectedImage(null);
+      setImagePreview(null);
     }
     setIsDialogOpen(true);
   };
@@ -145,6 +294,9 @@ const Products = () => {
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingProduct(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setIsUploading(false);
   };
 
   const bulkImportFireExtinguishers = async () => {
@@ -220,7 +372,13 @@ const Products = () => {
             <span className="hidden sm:inline">Importar Extintores</span>
             <span className="sm:hidden">Importar</span>
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) closeDialog();
+              else setIsDialogOpen(true);
+            }}
+          >
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => openDialog()} className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
@@ -236,7 +394,7 @@ const Products = () => {
                   Preencha os dados do produto
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" onPaste={handlePaste}>
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome *</Label>
                   <Input
@@ -282,9 +440,54 @@ const Products = () => {
                   />
                   <Label htmlFor="in_stock">Em Estoque</Label>
                 </div>
+
+                {/* Image Upload Section (igual à aba Produtos) */}
+                <div className="space-y-2">
+                  <Label>Imagem do Produto</Label>
+                  {imagePreview ? (
+                    <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-contain"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={removeImage}
+                        disabled={isUploading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id={editingProduct ? "edit-image-upload" : "new-image-upload"}
+                        disabled={isUploading}
+                      />
+                      <label
+                        htmlFor={editingProduct ? "edit-image-upload" : "new-image-upload"}
+                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      >
+                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                        <span className="text-sm text-muted-foreground">Clique para adicionar imagem</span>
+                        <span className="text-xs text-muted-foreground mt-1">ou cole uma imagem (Ctrl+V)</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">Salvar</Button>
-                  <Button type="button" variant="outline" onClick={closeDialog}>
+                  <Button type="submit" className="flex-1" disabled={isUploading}>
+                    {isUploading ? "Salvando..." : "Salvar"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={closeDialog} disabled={isUploading}>
                     Cancelar
                   </Button>
                 </div>
