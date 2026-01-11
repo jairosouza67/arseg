@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback: allow React Router routes to resolve client-side.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
