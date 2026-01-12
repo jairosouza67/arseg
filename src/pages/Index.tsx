@@ -24,10 +24,10 @@ const Index = () => {
 
         {/* CTA Section */}
         <section className="py-24 bg-gradient-hero relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-white/5" />
+          <div className="absolute inset-0 arseg-grid-overlay" />
           <div className="container relative z-10">
             <div className="max-w-3xl mx-auto text-center space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground tracking-tight">
+              <h2 className="text-4xl md:text-5xl font-display font-semibold text-primary-foreground tracking-tight">
                 Precisa de um Orçamento Personalizado?
               </h2>
               <p className="text-xl text-primary-foreground/90 leading-relaxed">

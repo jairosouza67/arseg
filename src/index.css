@@ -8,8 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-  --background: 0 0% 98%;
-  --foreground: 3 15% 15%;
+  --background: 18 22% 97%;
+  --foreground: 10 18% 12%;
 
   --card: 0 0% 100%;
   --card-foreground: 3 15% 15%;
@@ -25,8 +25,8 @@ All colors MUST be HSL.
   --secondary: 217 72% 47%; /* Azul logomarca */
   --secondary-foreground: 0 0% 100%;
 
-  --muted: 3 10% 96%;
-  --muted-foreground: 3 8% 46%;
+  --muted: 18 16% 94%;
+  --muted-foreground: 10 8% 40%;
 
   --accent: 3 85% 52%; /* Vermelho como accent */
   --accent-foreground: 0 0% 100%;
@@ -34,8 +34,8 @@ All colors MUST be HSL.
   --destructive: 3 85% 52%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 3 15% 90%;
-  --input: 3 10% 92%;
+  --border: 12 14% 88%;
+  --input: 12 12% 90%;
   --ring: 3 85% 52%;
 
   --radius: 0.5rem;
@@ -88,6 +88,42 @@ All colors MUST be HSL.
   }
 }
 
+@layer utilities {
+  .animate-fill-both {
+    animation-fill-mode: both;
+  }
+
+  .arseg-hero-atmo {
+    position: relative;
+    background-image:
+      radial-gradient(900px circle at 50% 18%, hsl(var(--primary) / 0.18), transparent 62%),
+      radial-gradient(700px circle at 18% 82%, hsl(var(--secondary) / 0.14), transparent 60%),
+      linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background)));
+  }
+
+  .arseg-hero-atmo::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, hsl(var(--foreground) / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+    background-size: 52px 52px;
+    mask-image: radial-gradient(900px circle at 50% 20%, black, transparent 70%);
+    opacity: 0.9;
+  }
+
+  .arseg-grid-overlay {
+    background-image:
+      linear-gradient(to right, hsl(var(--background) / 0) 0%, hsl(var(--background) / 0.06) 45%, hsl(var(--background) / 0.12) 50%, hsl(var(--background) / 0.06) 55%, hsl(var(--background) / 0) 100%),
+      linear-gradient(to right, hsl(var(--primary-foreground) / 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--primary-foreground) / 0.06) 1px, transparent 1px);
+    background-size: 100% 100%, 44px 44px, 44px 44px;
+    mask-image: radial-gradient(700px circle at 50% 40%, black, transparent 72%);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -100,7 +136,7 @@ All colors MUST be HSL.
 
 /* Custom styles for hero text to make it darker and more prominent */
 .hero-text-dark {
-  color: hsl(3 15% 15%) !important;
+  color: hsl(10 18% 12%) !important;
   font-weight: 600 !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
