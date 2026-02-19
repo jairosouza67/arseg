@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { debugLog, debugError } from "@/lib/debugUtils";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
@@ -54,13 +55,13 @@ const Login = () => {
       
       if (role === "seller" && from === "/admin") {
         destination = "/vendedor";
-        console.log("⚠️ Seller trying to access /admin, redirecting to /vendedor");
+        debugLog("⚠️ Seller trying to access /admin, redirecting to /vendedor");
       } else if (role === "admin" && from === "/vendedor") {
         destination = "/admin";
-        console.log("⚠️ Admin trying to access /vendedor, redirecting to /admin");
+        debugLog("⚠️ Admin trying to access /vendedor, redirecting to /admin");
       }
       
-      console.log("✅ User authenticated and loaded, redirecting to:", destination);
+      debugLog("✅ User authenticated and loaded, redirecting to destination");
       navigate(destination, { replace: true });
     }
   }, [isAuthenticated, authLoading, role, navigate, from]);
@@ -80,7 +81,7 @@ const Login = () => {
   const handleLogin = async (data: LoginForm) => {
     setLoading(true);
     try {
-      console.log("🔑 Attempting login with email:", data.email);
+      debugLog("🔑 Attempting login...");
 
       // Realizar login
       const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -89,11 +90,11 @@ const Login = () => {
       });
 
       if (error) {
-        console.error("❌ Login error:", error);
+        debugError("❌ Login error:", error.message);
         throw error;
       }
 
-      console.log("✅ Login successful, user:", authData.user?.id);
+      debugLog("✅ Login successful");
 
       // Aguardar confirmação da sessão
       let sessionConfirmed = false;
@@ -101,7 +102,7 @@ const Login = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.access_token) {
           sessionConfirmed = true;
-          console.log("✅ Session confirmed after", i + 1, "attempts");
+          debugLog("✅ Session confirmed");
           break;
         }
         await new Promise((r) => setTimeout(r, 200));
@@ -117,11 +118,11 @@ const Login = () => {
       });
 
       // Aguardar AuthContext processar o login (máximo 3 segundos)
-      console.log("⏳ Waiting for AuthContext to process login...");
+      debugLog("⏳ Waiting for AuthContext to process login...");
       await new Promise((r) => setTimeout(r, 1000));
 
       // Navegar para destino
-      console.log("➡️ Navigating to:", from);
+      debugLog("➡️ Navigating after login...");
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error("❌ Login failed:", error);

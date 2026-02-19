@@ -123,7 +123,12 @@ export const generateQuotePDF = async (quote: QuoteData) => {
   doc.setFont("helvetica", "italic");
   doc.text("Este documento é apenas um orçamento e não representa uma nota fiscal.", 105, pageHeight - 15, { align: "center" });
   
-  // Save
-  const fileName = `orcamento_${quote.customer_name.replace(/\s+/g, "_")}_${quote.id.substring(0, 8)}.pdf`;
+  // Sanitize customer name for use in filename (allow letters, accented chars, numbers, spaces)
+  const sanitizedName = quote.customer_name
+    .replace(/[^a-zA-Z0-9\u00C0-\u017E\s]/g, "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .substring(0, 50) || "cliente";
+  const fileName = `orcamento_${sanitizedName}_${quote.id.substring(0, 8)}.pdf`;
   doc.save(fileName);
 };

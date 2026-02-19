@@ -13,6 +13,19 @@ import { useCart } from "@/contexts/CartContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateQuotePDF } from "@/lib/generateQuotePDF";
 import { MobileNav } from "@/components/MobileNav";
+import * as z from "zod";
+
+const quoteFormSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(150, "Nome muito longo"),
+  contact: z.string().max(100, "Contato muito longo").optional(),
+  email: z.string().email("E-mail inválido").max(150, "E-mail muito longo").or(z.literal("")).optional(),
+  phone: z.string()
+    .min(8, "Telefone muito curto")
+    .max(20, "Telefone muito longo")
+    .regex(/^[\d\s()\-+]+$/, "Telefone contém caracteres inválidos"),
+  address: z.string().max(300, "Endereço muito longo").optional(),
+  observations: z.string().max(1000, "Observações muito longas").optional(),
+});
 
 interface Product {
   id: string;
@@ -152,6 +165,18 @@ const Orcamentos = () => {
         variant: "destructive",
         title: "Sem produtos",
         description: "Adicione produtos antes de solicitar o orçamento.",
+      });
+      return;
+    }
+
+    // Validar dados do formulário com Zod
+    const validation = quoteFormSchema.safeParse(formData);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast({
+        variant: "destructive",
+        title: "Dados inválidos",
+        description: firstError.message,
       });
       return;
     }

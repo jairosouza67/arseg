@@ -6,17 +6,13 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Validação de configuração
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error(
-    "⚠️ Supabase configuration missing: Define VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env"
-  );
-  console.error("Current values:", { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: SUPABASE_PUBLISHABLE_KEY ? 'SET' : 'MISSING' });
+  if (import.meta.env.DEV) {
+    console.error(
+      "⚠️ Supabase configuration missing: Define VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env"
+    );
+    console.error("Key status:", { url: !!SUPABASE_URL ? 'SET' : 'MISSING', key: SUPABASE_PUBLISHABLE_KEY ? 'SET' : 'MISSING' });
+  }
 }
-
-// Log das variáveis carregadas (para debug)
-console.log("🔧 Supabase Config:", { 
-  url: SUPABASE_URL, 
-  keyConfigured: !!SUPABASE_PUBLISHABLE_KEY 
-});
 
 // Criar cliente Supabase com configurações otimizadas
 export const supabase = createClient<Database>(

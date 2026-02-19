@@ -29,87 +29,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const lastSessionId = useRef<string | null>(null);
 
   // Função centralizada para carregar role do usuário
-  // Usando fetch nativo com AbortController para diagnóstico e timeout confiável
+  // Usa o SDK do Supabase com o cliente autenticado (JWT do usuário na sessão)
   const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
     const MAX_RETRIES = 2;
-    const TIMEOUT_MS = 8000; // 8 seconds timeout
-
-    // Obter URL e chave do Supabase para fetch nativo
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const TIMEOUT_MS = 8000;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log("[TEMP DEBUG] ⏰ Aborting request due to timeout");
+        debugLog("⏰ Aborting role request due to timeout");
         controller.abort();
       }, TIMEOUT_MS);
 
       try {
         if (attempt > 0) {
-          console.log(`[TEMP DEBUG] 🔄 Retry attempt ${attempt}/${MAX_RETRIES}`);
+          debugLog(`🔄 Retry attempt ${attempt}/${MAX_RETRIES}`);
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
 
-        console.log("[TEMP DEBUG] 📊 Loading role for user:", userId);
-        console.log("[TEMP DEBUG] ⏱️ Query start time:", new Date().toISOString());
-        console.log("[TEMP DEBUG] 🌐 Network status:", navigator.onLine ? "ONLINE" : "OFFLINE");
+        debugLog("📊 Loading user role...");
 
-        const startTime = performance.now();
-
-        // Usar fetch nativo para ter controle total do AbortController
-        const url = `${supabaseUrl}/rest/v1/user_roles?select=role&user_id=eq.${userId}`;
-        console.log("[TEMP DEBUG] 🔗 Fetching URL:", url);
-
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Prefer': 'return=representation'
-          },
-          signal: controller.signal
-        });
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .abortSignal(controller.signal)
+          .maybeSingle();
 
         clearTimeout(timeoutId);
 
-        const endTime = performance.now();
-        console.log("[TEMP DEBUG] ⏱️ Fetch completed in:", (endTime - startTime).toFixed(2), "ms");
-        console.log("[TEMP DEBUG] 📡 Response status:", response.status, response.statusText);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("[TEMP DEBUG] ❌ HTTP Error:", response.status, errorText);
+        if (error) {
+          debugError("❌ Role fetch error:", error.message);
           if (attempt < MAX_RETRIES) continue;
           return null;
         }
 
-        const data = await response.json();
-        console.log("[TEMP DEBUG] 📦 Response data:", data);
-
-        // API retorna array, pegar primeiro item
-        if (Array.isArray(data) && data.length > 0 && data[0]?.role) {
-          console.log("[TEMP DEBUG] ✅ Role found:", data[0].role);
-          return data[0].role as AppRole;
+        if (data?.role) {
+          debugLog("✅ Role found");
+          return data.role as AppRole;
         }
 
-        console.log("[TEMP DEBUG] ⚠️ No role found in database");
+        debugLog("⚠️ No role found in database");
         return null;
       } catch (err: any) {
         clearTimeout(timeoutId);
 
         const isAbortError = err.name === 'AbortError';
-        console.error(`[TEMP DEBUG] ❌ Exception (attempt ${attempt + 1}):`, {
-          name: err.name,
-          message: err.message,
-          isAbortError
-        });
+        debugError(`❌ Role fetch exception (attempt ${attempt + 1}):`, err.name);
 
         if (isAbortError || err.message?.includes('Network') || err.message?.includes('Failed to fetch')) {
           if (attempt < MAX_RETRIES) {
-            console.log("[TEMP DEBUG] 🔄 Will retry after error");
+            debugLog("🔄 Will retry after error");
             continue;
           }
         }
@@ -152,11 +122,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setUserId(session.user.id);
-      console.log("[TEMP DEBUG] About to load role for:", session.user.id);
+      debugLog("📊 Loading role for session...");
       const userRole = await loadUserRole(session.user.id);
-      console.log("[TEMP DEBUG] Role loaded:", userRole);
+      debugLog("✅ Role loaded");
       setRole(userRole);
-      console.log("[TEMP DEBUG] Role set in state");
     } catch (err) {
       debugError("❌ Error handling session change:", err);
       setRole(null);
@@ -167,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [loadUserRole]);
 
   useEffect(() => {
-    console.log("🔵 AuthProvider: Initializing...");
+    debugLog("🔵 AuthProvider: Initializing...");
     let isMounted = true;
 
     const initialize = async () => {
@@ -176,13 +145,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
-          console.error("❌ Error getting initial session:", error);
+          debugError("❌ Error getting initial session:", error);
           setLoading(false);
           initialLoadComplete.current = true;
           return;
         }
 
-        console.log("🔄 Initial session:", { userId: session?.user?.id, email: session?.user?.email });
+        debugLog("🔄 Initial session:", { hasUser: !!session?.user });
 
         if (!isMounted) return;
 
@@ -194,7 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
         }
       } catch (err) {
-        console.error("❌ Error initializing auth:", err);
+        debugError("❌ Error initializing auth:", err);
         setUserId(null);
         setRole(null);
         setLoading(false);
@@ -209,16 +178,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Listener de mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔔 Auth state changed:", { event, userId: session?.user?.id });
+      debugLog("🔔 Auth state changed:", { event, hasUser: !!session?.user });
 
       if (!isMounted) {
-        console.log("⚠️ Component unmounted, ignoring state change");
+        debugLog("⚠️ Component unmounted, ignoring state change");
         return;
       }
 
       // Ignorar eventos durante carga inicial, exceto SIGNED_IN e SIGNED_OUT
       if (!initialLoadComplete.current && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
-        console.log("⏭️ Skipping event during initial load:", event);
+        debugLog("⏭️ Skipping event during initial load:", event);
         return;
       }
 
@@ -226,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
-      console.log("🧹 AuthProvider cleanup");
+      debugLog("🧹 AuthProvider cleanup");
       isMounted = false;
       subscription.unsubscribe();
     };
@@ -237,13 +206,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isUser = !role;
   const isAuthenticated = !!userId;
 
-  // Log do estado atual
+  // Log do estado atual (apenas em desenvolvimento)
   useEffect(() => {
-    console.log("🔍 AuthProvider state:",
-      "userId:", userId,
+    debugLog("🔍 AuthProvider state:",
+      "hasUser:", !!userId,
       "role:", role,
-      "isAdmin:", isAdmin,
-      "isSeller:", isSeller,
       "isAuthenticated:", isAuthenticated,
       "loading:", loading
     );
@@ -251,20 +218,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Função para forçar refresh da autenticação
   const refreshAuth = useCallback(async () => {
-    console.log("🔄 Manually refreshing auth state...");
+    debugLog("🔄 Manually refreshing auth state...");
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       await handleSessionChange(session, 'MANUAL_REFRESH');
     } catch (err) {
-      console.error("❌ Error refreshing auth:", err);
+      debugError("❌ Error refreshing auth:", err);
     } finally {
       setLoading(false);
     }
   }, [handleSessionChange]);
 
   const signOut = async () => {
-    console.log("👋 AuthProvider: Signing out...");
+    debugLog("👋 AuthProvider: Signing out...");
     setLoading(true);
     try {
       await supabase.auth.signOut();
@@ -273,7 +240,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Force immediate state update
       initialLoadComplete.current = true;
     } catch (error) {
-      console.error("Error signing out:", error);
+      debugError("Error signing out:", error);
     } finally {
       setLoading(false);
     }

@@ -74,7 +74,7 @@ export const createRenewalReminder = async (
     throw error;
   }
   
-  console.log('Lembrete criado com sucesso:', data);
+  console.log('Lembrete criado com sucesso');
 };
 
 /**
@@ -217,7 +217,7 @@ export const sendRenewalReminderEmail = async (reminder: RenewalReminder): Promi
       throw error;
     }
 
-    console.log('Email enviado com sucesso:', data);
+    console.log('Email enviado com sucesso');
   } catch (error) {
     console.error('Erro ao enviar lembrete por email:', error);
     throw error;
@@ -235,9 +235,9 @@ export const sendPendingReminders = async (): Promise<void> => {
       if (reminder.customer_email) {
         await sendRenewalReminderEmail(reminder);
         await updateReminderStatus(reminder.id, 'sent');
-        console.log(`Lembrete enviado para ${reminder.customer_name}`);
+        console.log(`Lembrete enviado`);
       } else {
-        console.warn(`Cliente ${reminder.customer_name} não possui email cadastrado`);
+        console.warn(`Cliente sem email cadastrado`);
       }
     } catch (error) {
       console.error(`Erro ao enviar lembrete para ${reminder.customer_name}:`, error);
