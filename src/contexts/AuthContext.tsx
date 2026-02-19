@@ -27,19 +27,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const initialLoadComplete = useRef(false);
   const isLoadingRole = useRef(false);
   const lastSessionId = useRef<string | null>(null);
+  const loadGeneration = useRef(0);
 
   // Função centralizada para carregar role do usuário
   // Usa o SDK do Supabase com o cliente autenticado (JWT do usuário na sessão)
-  const loadUserRole = useCallback(async (userId: string): Promise<AppRole> => {
+  const loadUserRole = useCallback(async (userId: string, generation: number): Promise<AppRole> => {
     const MAX_RETRIES = 2;
-    const TIMEOUT_MS = 8000;
+    const TIMEOUT_MS = 6000;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        debugLog("⏰ Aborting role request due to timeout");
-        controller.abort();
-      }, TIMEOUT_MS);
+      // Abandon this load if a newer request has superseded it
+      if (loadGeneration.current !== generation) {
+        debugLog("🚫 Role load cancelled (superseded by newer request)");
+        return null;
+      }
 
       try {
         if (attempt > 0) {
@@ -49,14 +50,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         debugLog("📊 Loading user role...");
 
-        const { data, error } = await supabase
+        const queryPromise = supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", userId)
-          .abortSignal(controller.signal)
           .maybeSingle();
 
-        clearTimeout(timeoutId);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("⏰ Role request timeout")), TIMEOUT_MS)
+        );
+
+        const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
         if (error) {
           debugError("❌ Role fetch error:", error.message);
@@ -72,16 +76,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         debugLog("⚠️ No role found in database");
         return null;
       } catch (err: any) {
-        clearTimeout(timeoutId);
+        debugError(`❌ Role fetch exception (attempt ${attempt + 1}):`, err.message);
 
-        const isAbortError = err.name === 'AbortError';
-        debugError(`❌ Role fetch exception (attempt ${attempt + 1}):`, err.name);
-
-        if (isAbortError || err.message?.includes('Network') || err.message?.includes('Failed to fetch')) {
-          if (attempt < MAX_RETRIES) {
-            debugLog("🔄 Will retry after error");
-            continue;
-          }
+        if (attempt < MAX_RETRIES) {
+          debugLog("🔄 Will retry after error");
+          continue;
         }
 
         return null;
@@ -91,19 +90,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
 
-  // Função para processar mudanças de sessão
   const handleSessionChange = useCallback(async (session: Session | null, event: string) => {
     debugLog("🔄 Processing session change:", { event, sessionId: session?.user?.id });
 
     // Evitar processamento duplicado da mesma sessão
     if (session?.user?.id === lastSessionId.current && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
       debugLog("⏭️ Skipping duplicate session processing");
-      return;
-    }
-
-    // Evitar race condition: se já estamos carregando, aguardar
-    if (isLoadingRole.current) {
-      debugLog("⏳ Already loading role, skipping...");
       return;
     }
 
@@ -116,6 +108,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // Increment generation — any in-flight loadUserRole with an older generation
+    // will detect the mismatch and abandon its result.
+    const generation = ++loadGeneration.current;
     isLoadingRole.current = true;
     setLoading(true);
     lastSessionId.current = session.user.id;
@@ -123,15 +118,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setUserId(session.user.id);
       debugLog("📊 Loading role for session...");
-      const userRole = await loadUserRole(session.user.id);
+      const userRole = await loadUserRole(session.user.id, generation);
+
+      // Only apply the result if this load is still the current one
+      if (loadGeneration.current !== generation) {
+        debugLog("🚫 Role result discarded (superseded)");
+        return;
+      }
+
       debugLog("✅ Role loaded");
       setRole(userRole);
     } catch (err) {
       debugError("❌ Error handling session change:", err);
       setRole(null);
     } finally {
-      isLoadingRole.current = false;
-      setLoading(false);
+      if (loadGeneration.current === generation) {
+        isLoadingRole.current = false;
+        setLoading(false);
+      }
     }
   }, [loadUserRole]);
 
