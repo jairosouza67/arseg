@@ -27,6 +27,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isLoadingRole = useRef(false);
   const lastSessionId = useRef<string | null>(null);
   const loadGeneration = useRef(0);
+  // Set to true once the authoritative INITIAL_SESSION event has been processed.
+  // SIGNED_IN events that fire before this (during Supabase client initialization)
+  // are initialization artifacts and must be ignored to prevent premature role fetches
+  // that hang because the client isn't fully ready yet.
+  const initialSessionReceived = useRef(false);
 
   // Função centralizada para carregar role do usuário (sem retries — falha rápida)
   const loadUserRole = useCallback(async (userId: string, generation: number): Promise<AppRole> => {
@@ -72,8 +77,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const handleSessionChange = useCallback(async (session: Session | null, event: string) => {
     debugLog("🔄 Processing session change:", { event, userId: session?.user?.id });
 
+    // SIGNED_IN fires during Supabase client _initialize() before INITIAL_SESSION.
+    // At that point the client isn't fully ready, so queries hang. Skip it and wait
+    // for the authoritative INITIAL_SESSION event instead.
+    if (event === 'SIGNED_IN' && !initialSessionReceived.current) {
+      debugLog("⏭️ Skipping early SIGNED_IN (before INITIAL_SESSION)");
+      return;
+    }
+
+    // Mark that we've received the canonical first event.
+    if (event === 'INITIAL_SESSION') {
+      initialSessionReceived.current = true;
+    }
+
     if (!session?.user) {
-      // No session — authoritative empty state (INITIAL_SESSION with null, SIGNED_OUT)
       setUserId(null);
       setRole(null);
       setLoading(false);
@@ -82,13 +99,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // Same user, non-login event (TOKEN_REFRESHED, USER_UPDATED, etc.):
-    // The JWT was silently renewed — no need to reload the role or flash loading.
+    // JWT was silently renewed — no need to reload the role or flash loading.
     if (session.user.id === lastSessionId.current && event !== 'SIGNED_IN') {
       debugLog("⏭️ Silent session update:", event);
       return;
     }
 
-    // Full role load: first time seeing this user OR explicit SIGNED_IN
+    // Full role load: INITIAL_SESSION with user, or subsequent SIGNED_IN (real login)
     const generation = ++loadGeneration.current;
     setLoading(true);
     lastSessionId.current = session.user.id;
