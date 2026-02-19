@@ -53,7 +53,7 @@ const Login = () => {
       // Prevenir loop: se é seller tentando acessar /admin, redirecionar para /vendedor
       let destination = from;
       
-      if (role === "seller" && from === "/admin") {
+      if (role === "user" && from === "/admin") {
         destination = "/vendedor";
         debugLog("⚠️ Seller trying to access /admin, redirecting to /vendedor");
       } else if (role === "admin" && from === "/vendedor") {

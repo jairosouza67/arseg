@@ -4,7 +4,7 @@ import type { Enums } from "@/integrations/supabase/types";
 import type { Session } from "@supabase/supabase-js";
 import { debugLog, debugWarn, debugError } from "@/lib/debugUtils";
 
-type AppRole = Enums<"app_role"> | 'seller' | null;
+type AppRole = Enums<"app_role"> | null;
 
 interface AuthContextType {
   userId: string | null;
@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [handleSessionChange]);
 
   const isAdmin = role === "admin";
-  const isSeller = role === "seller";
+  const isSeller = role === "user";
   const isUser = !role;
   const isAuthenticated = !!userId;
 

@@ -29,7 +29,7 @@ export const Header = () => {
 
   const getDashboardPath = () => {
     if (role === "admin") return "/admin";
-    if (role === "seller") return "/vendedor";
+    if (role === "user") return "/vendedor";
     return "/login";
   };
 

@@ -18,9 +18,9 @@ import {
 import { toast } from "sonner";
 import type { Enums } from "@/integrations/supabase/types";
 
-// Define os papéis disponíveis, garantindo que 'seller' esteja incluído.
+// Define os papéis disponíveis (os valores válidos do enum app_role).
 type AppRole = Enums<"app_role">;
-const ROLES: AppRole[] = ["admin", "seller", "user"];
+const ROLES: AppRole[] = ["admin", "user"];
 
 interface UserData {
   id: string;
