@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [role, setRole] = useState<AppRole>(null);
   const [loading, setLoading] = useState(true);
-  const initialLoadComplete = useRef(false);
   const isLoadingRole = useRef(false);
   const lastSessionId = useRef<string | null>(null);
   const loadGeneration = useRef(0);
@@ -71,10 +70,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const handleSessionChange = useCallback(async (session: Session | null, event: string) => {
-    debugLog("🔄 Processing session change:", { event, sessionId: session?.user?.id });
+    debugLog("🔄 Processing session change:", { event, userId: session?.user?.id });
 
     if (!session?.user) {
-      debugLog("⚠️ No session, clearing auth state");
+      // No session — authoritative empty state (INITIAL_SESSION with null, SIGNED_OUT)
       setUserId(null);
       setRole(null);
       setLoading(false);
@@ -82,20 +81,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // TOKEN_REFRESHED and any other event for the same already-loaded user:
-    // silently acknowledge the new session without changing loading state or
-    // re-fetching the role — prevents white screen on tab return.
-    if (
-      session.user.id === lastSessionId.current &&
-      event !== 'SIGNED_IN' &&
-      event !== 'SIGNED_OUT'
-    ) {
-      debugLog("⏭️ Silent session update (no role reload needed):", event);
-      setUserId(session.user.id);
+    // Same user, non-login event (TOKEN_REFRESHED, USER_UPDATED, etc.):
+    // The JWT was silently renewed — no need to reload the role or flash loading.
+    if (session.user.id === lastSessionId.current && event !== 'SIGNED_IN') {
+      debugLog("⏭️ Silent session update:", event);
       return;
     }
 
-    // Full role load: SIGNED_IN or first time seeing this user
+    // Full role load: first time seeing this user OR explicit SIGNED_IN
     const generation = ++loadGeneration.current;
     setLoading(true);
     lastSessionId.current = session.user.id;
@@ -127,58 +120,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     debugLog("🔵 AuthProvider: Initializing...");
     let isMounted = true;
 
-    const initialize = async () => {
-      try {
-        // Obter sessão atual
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          debugError("❌ Error getting initial session:", error);
-          setLoading(false);
-          initialLoadComplete.current = true;
-          return;
-        }
-
-        debugLog("🔄 Initial session:", { hasUser: !!session?.user });
-
-        if (!isMounted) return;
-
-        if (session?.user) {
-          await handleSessionChange(session, 'INITIAL_LOAD');
-        } else {
-          setUserId(null);
-          setRole(null);
-          setLoading(false);
-        }
-      } catch (err) {
-        debugError("❌ Error initializing auth:", err);
-        setUserId(null);
-        setRole(null);
-        setLoading(false);
-      } finally {
-        if (isMounted) {
-          initialLoadComplete.current = true;
-        }
-      }
-    };
-
-    initialize();
-
-    // Listener de mudanças de autenticação
+    // Supabase v2 fires INITIAL_SESSION as the very first event with the
+    // fully-resolved session (after any background token refresh).
+    // Using onAuthStateChange alone avoids the race where getSession()
+    // returns null before the refresh completes, which used to trigger
+    // loading=false → redirect to /login on every page reload.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       debugLog("🔔 Auth state changed:", { event, hasUser: !!session?.user });
-
-      if (!isMounted) {
-        debugLog("⚠️ Component unmounted, ignoring state change");
-        return;
-      }
-
-      // Ignorar eventos durante carga inicial, exceto SIGNED_IN e SIGNED_OUT
-      if (!initialLoadComplete.current && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
-        debugLog("⏭️ Skipping event during initial load:", event);
-        return;
-      }
-
+      if (!isMounted) return;
       await handleSessionChange(session, event);
     });
 
