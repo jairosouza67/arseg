@@ -1,8 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Resend } from 'resend';
-
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY;
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+// Redundante: o envio de e-mails agora é feito via Supabase Edge Functions
+// para proteger a chave de API e garantir conformidade de segurança.
 
 export interface RenewalReminder {
   id: string;
@@ -73,7 +71,7 @@ export const createRenewalReminder = async (
     });
     throw error;
   }
-  
+
   console.log('Lembrete criado com sucesso');
 };
 
@@ -152,9 +150,6 @@ export const deleteReminder = async (reminderId: string): Promise<void> => {
  * Envia um lembrete de renovação por email
  */
 export const sendRenewalReminderEmail = async (reminder: RenewalReminder): Promise<void> => {
-  if (!resend) {
-    throw new Error('Resend API key não configurada. Adicione VITE_RESEND_API_KEY no arquivo .env');
-  }
 
   if (!reminder.customer_email) {
     throw new Error('Cliente não possui email cadastrado');
@@ -164,60 +159,61 @@ export const sendRenewalReminderEmail = async (reminder: RenewalReminder): Promi
   const renewalDate = new Date(reminder.renewal_date).toLocaleDateString('pt-BR');
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'ARSEG Extintores <noreply@arseg.com.br>',
-      to: [reminder.customer_email],
-      subject: 'Lembrete: Renovação Anual de Extintores',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333; text-align: center;">Lembrete de Renovação</h1>
-          
-          <p>Olá ${reminder.customer_name},</p>
-          
-          <p>Este é um lembrete automático sobre a <strong>renovação anual dos seus extintores</strong>.</p>
-          
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #495057; margin-top: 0;">Detalhes da Renovação:</h3>
-            <ul style="list-style: none; padding: 0;">
-              <li style="margin-bottom: 10px;"><strong>Data do Lembrete:</strong> ${reminderDate}</li>
-              <li style="margin-bottom: 10px;"><strong>Data de Renovação:</strong> ${renewalDate}</li>
-              <li style="margin-bottom: 10px;"><strong>Cliente:</strong> ${reminder.customer_name}</li>
-              <li style="margin-bottom: 10px;"><strong>Telefone:</strong> ${reminder.customer_phone}</li>
-            </ul>
+    const { data, error } = await supabase.functions.invoke('processar-email', {
+      body: {
+        to: reminder.customer_email,
+        subject: 'Lembrete: Renovação Anual de Extintores',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #333; text-align: center;">Lembrete de Renovação</h1>
+            
+            <p>Olá ${reminder.customer_name},</p>
+            
+            <p>Este é um lembrete automático sobre a <strong>renovação anual dos seus extintores</strong>.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #495057; margin-top: 0;">Detalhes da Renovação:</h3>
+              <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 10px;"><strong>Data do Lembrete:</strong> ${reminderDate}</li>
+                <li style="margin-bottom: 10px;"><strong>Data de Renovação:</strong> ${renewalDate}</li>
+                <li style="margin-bottom: 10px;"><strong>Cliente:</strong> ${reminder.customer_name}</li>
+                <li style="margin-bottom: 10px;"><strong>Telefone:</strong> ${reminder.customer_phone}</li>
+              </ul>
+            </div>
+            
+            <p style="color: #dc3545; font-weight: bold;">
+              ⚠️ A renovação dos extintores é obrigatória por lei e essencial para sua segurança.
+            </p>
+            
+            <p>Entre em contato conosco para agendar a manutenção e renovação:</p>
+            
+            <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0;"><strong>ARSEG Extintores</strong></p>
+              <p style="margin: 5px 0;">📞 Telefone: (11) 99999-9999</p>
+              <p style="margin: 5px 0;">📧 Email: contato@arseg.com.br</p>
+            </div>
+            
+            <p style="color: #6c757d; font-size: 14px;">
+              Este é um email automático. Por favor, não responda diretamente a este email.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+            
+            <p style="text-align: center; color: #6c757d; font-size: 12px;">
+              ARSEG Extintores - Segurança em Primeiro Lugar<br>
+              © ${new Date().getFullYear()} ARSEG. Todos os direitos reservados.
+            </p>
           </div>
-          
-          <p style="color: #dc3545; font-weight: bold;">
-            ⚠️ A renovação dos extintores é obrigatória por lei e essencial para sua segurança.
-          </p>
-          
-          <p>Entre em contato conosco para agendar a manutenção e renovação:</p>
-          
-          <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0;"><strong>ARSEG Extintores</strong></p>
-            <p style="margin: 5px 0;">📞 Telefone: (11) 99999-9999</p>
-            <p style="margin: 5px 0;">📧 Email: contato@arseg.com.br</p>
-          </div>
-          
-          <p style="color: #6c757d; font-size: 14px;">
-            Este é um email automático. Por favor, não responda diretamente a este email.
-          </p>
-          
-          <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
-          
-          <p style="text-align: center; color: #6c757d; font-size: 12px;">
-            ARSEG Extintores - Segurança em Primeiro Lugar<br>
-            © ${new Date().getFullYear()} ARSEG. Todos os direitos reservados.
-          </p>
-        </div>
-      `,
+        `,
+      }
     });
 
     if (error) {
-      console.error('Erro ao enviar email:', error);
+      console.error('Erro ao enviar email via Edge Function:', error);
       throw error;
     }
 
-    console.log('Email enviado com sucesso');
+    console.log('Email enviado com sucesso via Edge Function');
   } catch (error) {
     console.error('Erro ao enviar lembrete por email:', error);
     throw error;
