@@ -36,7 +36,7 @@ async function keepalive() {
   console.log(`🏓 [${new Date().toISOString()}] Executando keepalive...`);
 
   // ⚠️ Troque "empresas" pelo nome de qualquer tabela existente no seu banco
-  const TABELA = 'perfis_usuario';
+  const TABELA = 'user_roles';
 
   try {
     const response = await fetch(
